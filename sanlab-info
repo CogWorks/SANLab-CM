@@ -1,0 +1,6 @@
+#!/bin/bash
+
+res=`grep -E "defmethod|defun" *.lisp | wc -l`
+echo "Methods and functions: $res"
+res=`cat *.lisp | wc -l`
+echo "Total number of lines: $res"
