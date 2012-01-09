@@ -19,37 +19,6 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 
 ; Activities
 
-; The activity type class
-#|
-(defclass activity-type ()
-  ((symname :initform nil
-            :initarg :symname
-            :accessor symname)
-   (parent :initform nil
-           :initarg :parent
-           :accessor parent)
-   (typename :initform nil
-             :initarg :typename
-             :accessor typename)
-   (instname :initform nil
-             :initarg :instname
-             :accessor instname)
-   (extra :initform nil
-          :initarg :extra
-          :accessor extra)
-   (distribution :initform nil
-                 :initarg :distribution
-                 :accessor distribution)
-   (dist-params :initform nil
-                :initarg :dist-params
-                :accessor dist-params)
-   (color :initform nil
-          :initarg :color
-          :accessor color))
-  (:documentation "Encapsulates an activity type, including the default distribution and parameters")
-)
-|#
-
 ; This macro wraps the creation of an activity type with set parameters.
 ; Used by sat files to create activity types
 (defmacro define-activity-type (typename extra symname parent instname dist params color)
@@ -60,7 +29,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
                         :instname ,instname
                         :extra ,extra
                         :distribution ,dist
-                        :dist-params ',params
+                        :default-params ',params
                         :color ,color)
          (app-property 'activity-types)))
 
