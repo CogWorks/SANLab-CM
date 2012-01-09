@@ -78,6 +78,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
    :best-height 700
    :enable-tooltips t
    :help-callback #'(lambda (self pane type key)
+                      (declare (ignore key))
                       (cond ((eql type :tooltip)
                              (cond ((eql pane (slot-value self 'arrow-button))
                                     "Select Tool - Select one or more activities or constraints to manipulate them.")

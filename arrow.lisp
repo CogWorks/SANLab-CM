@@ -17,18 +17,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 |#
 
-(defclass arrow (capi:pinboard-object)
-  ((is-ir-arrow :initform nil :initarg :ir-arrow :reader is-ir-arrow? :writer (setf is-ir-arrow))
-   (ir-color :initform nil :initarg :ir-color :accessor ir-color)
-   (normal-arrow :initform (make-instance 'capi:arrow-pinboard-object :head :middle :head-breadth 4) :accessor normal-arrow)
-   (ir-arrow :initform nil :accessor ir-arrow)
-   (start :initform nil :initarg :start :accessor start)
-   (end :initform nil :initarg :end :accessor end)
-   (selected :initform nil :accessor selected)
-)
-  (:documentation "Visually represents the dependency of one activity on another.")
-)
-
 ; Decomposes all arrows if any is part of an interactive routine
 (defun get-arrow-parts (list-of-arrows)
   (let ((arrows nil))

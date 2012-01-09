@@ -74,8 +74,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 )
 
 (defmethod draggable-layout-select ((self draggable-layout) x y)
-  (let ((pane (capi:pinboard-object-at-position self x y))
-        (old-pane (draggable-layout-selected self)))
+  (let ((pane (capi:pinboard-object-at-position self x y)))
     (setf (draggable-layout-selected self) pane))
   (dolist (i (capi:layout-description self))
     (capi:redraw-pinboard-object i)))

@@ -201,6 +201,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
             (if min-activity
                 (multiple-value-bind (string-left string-top string-right string-bottom)
                     (gp:get-string-extent port (label min-activity) font)
+                  (declare (ignore string-top string-bottom))
                   (let ((start-pos x)
                         (box-width nil))
                     (setf box-width (max (- string-right string-left) 100))

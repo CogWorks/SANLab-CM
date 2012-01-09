@@ -22,6 +22,8 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 (defparameter *cogtool-trace* nil)
 (defparameter *system-events* (make-hash-table :test #'equal))
 (defparameter *last-display-event* nil)
+(defparameter *vocal-events* nil)
+(defparameter *manual-events* nil)
 
 #|
 Prints warning messages to stderr
@@ -975,8 +977,6 @@ Finds the model inside of the target lisp file. This expects the model to be def
     (setf (buffer-of-interest 'vocal) (make-instance 'buffer-action :label (format nil "exec~A" (subseq (label last-act) 4)) :start-time time))
     (push (buffer-of-interest 'vocal) (dependents last-act))))
 
-(defparameter *vocal-events* nil)
-
 (defmethod processed-trace-object :after ((time number) (module (eql 'speech)) (action (eql 'finish-movement)) &rest extras)
   (setf (end-time (buffer-of-interest 'vocal)) time)
   (dolist (event *vocal-events*)
@@ -1242,8 +1242,6 @@ Finds the model inside of the target lisp file. This expects the model to be def
                                                                   :operator-type "Right Hand Operator"))
       (push (buffer-of-interest 'manual :index id) (dependents last-act))
       (push last-act (prerequisites (buffer-of-interest 'manual :index id))))))
-
-(defparameter *manual-events* nil)
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'motor)) (action (eql 'output-key)) &rest extras)
   (multiple-value-bind (id extras) (strip-move-id extras)

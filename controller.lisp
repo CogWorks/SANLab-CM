@@ -300,7 +300,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
   (block nil
     (setf *standard-output* io *trace-output* io)
     (reset-actr-trace-system)
-    (let (open-model trace model progwindow)
+    (let (open-model trace progwindow)
       (setf trace (capi:prompt-for-file "Select information exported from CogTool" :operation :open :if-does-not-exist :error :filters '("CogTool Export" "*.txt" "All Files" "*.*")))
       (if (not trace) (return))
       (setf progwindow (make-instance 'progress-window))
