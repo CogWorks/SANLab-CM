@@ -1,0 +1,36 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defdist "Gamma CV"
+"Returns a random value draw from a gamma distribution given a mean value and a coefficient of variation."
+("Mean" "Coefficient of Variation")
+(nil nil)
+(lambda ; start lambda
+(mean cv)
+(cond ((< cv 0)
+       (error "Gamma CV given a coefficient of variation <= 0. Unable to continue."))
+      ((= cv 0)
+       mean)
+      (t
+       (call-distribution "Gamma"
+			  (/ 1 (expt cv 2))
+			  (* (expt cv 2) mean))
+       ))
+) ; end lambda
+) ; end defdist

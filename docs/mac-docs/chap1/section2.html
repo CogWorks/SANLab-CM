@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>SANLab-CM for Mac OS X</title>
+</head>
+<body>
+<div style="width:800px">
+<a href="section1.html">&lt;&lt; Back</a><img src="../../images/blank.bmp" width="150px" height="1px"/><a href="overview.html">Top</a><img src="../../images/blank.bmp" width="150px" height="1px"/><a href="section3.html">Next &gt;&gt;</a><br/>
+<h1>Chapter 1</h1>
+<h2>Instantiating Activities</h2>
+<p>
+Since the purpose of SANLab-CM is to model CPM-GOMS using activity networks, activities are the single-most important construct within the system. Activities are of one unique type and may be part of an interactive routine. To instantiate an activity, simply select the desired operator type from the list of activities in the Toolbox. The status label at the bottom of the model editor should confirm the selection of the activity type. Next, click within the model editor's view port to instantiate activities at the cursor position. The activity tool will remain active until another type is selected, an interactive routine is selected, or the seletion or connection tool are activated (either through pressing their buttons or by pressing Ctrl+S and Ctrl+C, respectively).
+</p>
+<div style="float:left;width:200px;padding:16px;">
+<img src="../../images/activity-1.png" width="200px"/><br />
+<p style="font-size:10;text-align:center;"><b>Figure 1.</b> Instantiated cognitive operator</p>
+</div>
+<p>
+In some cases, the default distribution and parameters for an activity type will be sufficient (cf. Cognitive Operator activity type). However, to best model the task it may be important to adjust the distribution which determines the execution time of the activity or the parameters passed to that distribution. To do this, selection mode must be active (either by clicking the Select button in the toolbox or pressing Ctrl+S). When in selection mode, select the activity or activities that should be modified. Hovering the mouse over an activity for about 500 ms will cause it to expand to show all of its parameters.
+</p>
+<div style="float:left;width:200px;padding:16px;">
+<img src="../../images/activity-2b.png" width="200px"/><br/>
+<p style="font-size:10;text-align:center;"><b>Figure 2.</b> Expanded activity showing all properties</p>
+</div>
+<p>
+The first item inside of an activity is the activity label. This is a plain string which can be used to describe the purpose of the activity. It is automatically prepended by SANLab-CM with an abbreviation of the activity type for quick reference, especially when activity-types share similar color-coding.
+</p>
+<p>
+Clicking on the distribution label will show a drop-down box with all of the available distributions. To cancel the drop-down, press the Escape key or click on the activity outside of the box. Choosing a distribution with a different number of parameters will truncate or extend the parameter list and its values depending on number of parameters the new distribution takes. 
+</p>
+<div style="float:right;width:200px;padding:16px;">
+<img src="../../images/activity-2a.png" width="200px"/><br />
+<p style="font-size:10;text-align:center;"><b>Figure 3.</b> Gamma distribution with a random coefficient of variation</p>
+</div>
+<p>
+No restriction is placed on the value of a parameter. All of the distributions supplied with SANLab-CM expect numerical values, but more complex distributions could take strings or LISP symbols. A special processing directive <code>(random)</code> is available for making more random values as input. The random directive has the following format:
+</p>
+<code>
+(random lower upper step)
+</code>
+<p>
+where:<br/><i>lower</i> is the lower bound on a uniform distribution,<br/>
+<i>upper</i> is the upper bound on a uniform distribution,<br/>
+<i>step</i> is the number of trials before calculating a new value:<br/>
+&nbsp;&nbsp;&nbsp;0 indicates to randomly pick a value once at the beginning and never calculate afterwards.<br/>
+&nbsp;&nbsp;&nbsp;1 indicates to randomly pick a value every trial<br/>
+&nbsp;&nbsp;&nbsp;n>1 indicates to randomly pick a value every n trials
+</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defroutine
+"Slow Move-Click"
+#(:RGB 0.7 0.0 0.7)
+(deftask
+1
+"Initiate Move Cursor"
+"Initiate Operator"
+"Constant"
+'("0")
+0 200
+nil '(2 3)
+)
+(deftask
+2
+"Attend Target"
+"Attend Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+200 200
+'(1) '(4)
+)
+(deftask
+3
+"Move cursor"
+"Right Hand Operator"
+"Gamma CV"
+'("545" "(random 0.1 1.0 1)")
+200 300
+'(1) '(5 12 13)
+)
+(deftask
+4
+"Initiate POG"
+"Initiate Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+400 200
+'(2) '(6 7)
+)
+(deftask
+5
+"New cursor location"
+"System Resource"
+"Constant"
+'("0")
+600 0
+'(3) '(8)
+)
+(deftask
+6
+"Verify target pos"
+"Verify Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+700 200
+'(4 9) '(10)
+)
+(deftask
+7
+"POG"
+"Eye Movement Operator"
+"Gamma CV"
+'("30" "(random 0.1 1.0 1)")
+500 400
+'(4) '(9)
+)
+(deftask
+8
+"Perceive Cursor @Target"
+"Perceptual Operator (Visual)"
+"Gamma CV"
+'("100" "(random 0.1 1.0 1)")
+1000 100
+'(5 9 10) '(11)
+)
+(deftask
+9
+"Perceive Target"
+"Perceptual Operator (Visual)"
+"Gamma CV"
+'("100" "(random 0.1 1.0 1)")
+600 100
+'(7) '(6 8)
+)
+(deftask
+10
+"Attend cursor @target"
+"Attend Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+900 200
+'(6) '(8 11)
+)
+(deftask
+11
+"Verify cursor @target"
+"Verify Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+1100 200
+'(10 8) '(12)
+)
+(deftask
+12
+"Initiate mouse down"
+"Initiate Operator"
+"Gamma CV"
+'("50" "(random 0.1 1.0 1)")
+1300 200
+'(11) '(13)
+)
+(deftask
+13
+"Mouse down"
+"Right Hand Operator"
+"Gamma CV"
+'("100" "(random 0.1 1.0 1)")
+1400 300
+'(12) '(14)
+)
+(deftask
+14
+"END"
+"Cognitive Operator"
+"Constant"
+'("0")
+1500 200
+'(13) nil
+)
+)

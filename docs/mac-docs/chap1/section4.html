@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>SANLab-CM for Mac OS X</title>
+</head>
+<body>
+<div style="width:800">
+<a href="section3.html">&lt;&lt; Back</a><img src="../../images/blank.bmp" width="150px" height="1px"/><a href="overview.html">Top</a><img src="../../images/blank.bmp" width="150px" height="1px"/><a href="section5.html">Next &gt;&gt;</a><br/>
+<h1>Chapter 1</h1>
+<h2>Building a Basic Model</h2>
+<p>
+This section will show how activities and interactive routines can be used to build a CPM-GOMS model from the ground up. The model itself will be based on the first telephone operator &amp; assistance (TAO) call type modeled by Gray, John, &amp; Atwood (1993). Below is a plain-text description of the task:
+</p>
+<p style="font-size:12;padding-left:32px;padding-right:32px;font-style:italic;">
+The TAO would wait for the terminal to signal an incoming call. Upon hearing the arrival tone, the TAO would look for a pair of symbols which encoded whether the call was initiated from a private telephone or a public telephone. Given this information, the TAO would greet the caller either with the statement "New England Telephone, may I help you?" or "New England <b>Public</b> Telephone, may I help you?". In this particular case, the customer would request that the call be made collect. In response to this, the operator would need to press the STA COL button, write the customer's name on a notepad, and verify the billing information on the screen. The system would ring until the individual being called answered. The TAO would query the callee if her or she would accept the charges for the collect call. Upon receiving an affirmative answer, the TAO presses the POS-REL to release the workstation and allow for a new call.
+</p>
+<p>
+First, it is necessary to build a standard GOMS representation of this task. Since this task is relatively serial in its execution, it can be assumed that there is a single goal and a single method with multiple submethods. For operators, there are both visual and auditory perception, speech, left-hand and right-hand key presses, writing (using the right hand), and eye movements. Here is a rough first method:
+</p>
+<p><b>GOAL:</b> HANDLE-CALL</p>
+<p>
+<b>METHOD</b> for HANDLE-CALL:<br />
+<ol>
+<li>Listen for CAT</li>
+<li>Look for symbols</li>
+<li>Identify call type</li>
+<li>Greet customer (GREET)</li>
+<li>Listen for customer saying "I would like to place a collect call from John Smith to 518-555-5555"</li>
+<li>Press the STA COL button to identify collect call</li>
+<li>Write customer's name down</li>
+<li>Enter telephone number</li>
+<li>Verify billing information</li>
+<li>Wait for individual to answer call</li>
+<li>Prompt caller (PROMPT)</li>
+<li>Press the POS-REL button to release workstation</li>
+</ol>
+<b>METHOD</b> for GREET:<br />
+<b>SELECTION RULE:</b> Public call type<br />
+<ol>
+  <li>Say "New England Public Telephone, may I help you?"</li>
+</ol>
+<b>METHOD</b> for GREET:<br />
+<b>SELECTION RULE:</b> Private call type<br />
+<ol>
+  <li>Say "New England Telephone, may I help you?"</li>
+</ol>
+<b>METHOD</b> for PROMPT:<br />
+<ol>
+  <li></li>
+</ol>
+</p>
+</div>
+</body>
+</html>

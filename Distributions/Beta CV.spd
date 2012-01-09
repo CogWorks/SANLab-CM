@@ -1,0 +1,36 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defdist "Beta CV"
+"Picks random values from a beta distribution."
+("A" "B" "Mean adjusted" "Coefficient of Variation adjusted")
+(nil nil nil nil)
+(lambda ; start lambda
+(a b m-adj cv-adj)
+(if (<= cv-adj 0)
+    (error "Beta CV given a coefficient of variation <= 0. Unable to continue."))
+(let* ((m (/ (- m-adj a) (- b a)))
+       (cv (* cv-adj (/ m-adj (- m-adj a))))
+       (alpha (- (/ (+ -1 m (* cv cv m)) (* cv cv))))
+       (beta (/ (* (+ m -1) (+ -1 m (* cv cv m))) (* cv cv m))))
+  (if (or (< alpha 0) (< beta 0))
+      (error "Invalid parameters for beta distribution."))
+  (call-distribution "Beta" a b alpha beta))
+) ; end lambda
+) ; end defdist

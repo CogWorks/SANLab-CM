@@ -1,0 +1,45 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defdist "Gamma Cheng"
+"Helper function for a gamma distribution"
+("A")
+(nil)
+(lambda ; start lambda
+(a)
+(let ((b (- a (log 4)))
+      (c (+ a (sqrt (- (* 2 a) 1))))
+      (l (sqrt (- (* 2 a) 1)))
+      (U 0.0) (V 0.0)
+      (X 0.0) (Y 0.0)
+      (Z 0.0) (R 0.0))
+  (loop
+   (setf U (non-zero-random 1.0))
+   (setf V (non-zero-random 1.0))
+   (setf Y (* (/ 1 l) (log (/ V (- 1 V)))))
+   (setf X (* a (exp Y)))
+   (setf Z (* U V V))
+   (setf R (+ b (* c Y) (- X)))
+   (if (>= R (- (* (/ 9 2) Z) (+ 1 (log (/ 9 2)))))
+       (return X))
+   (if (>= R (log Z))
+       (return X)))
+  )
+) ; end lambda
+) ; end defdist

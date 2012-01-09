@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+
+REVISION=`svn info http://cwl-projects.cogsci.rpi.edu/svn/SANLab/v3.0/ | grep Revision | cut -d" " -f 2`
+REVISION=$((REVISION+1))
+
+echo $REVISION > CURRENT_REVISION
+svn commit

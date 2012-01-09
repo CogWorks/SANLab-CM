@@ -1,0 +1,32 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defdist "Multi-Unit Gamma CV"
+"Draws multiple random variables from a gaussian distribution and sums them together to simulate individual syllables."
+("Mean" "Coefficient of Variance" "Num. Units")
+(nil nil nil)
+(lambda ; start lambda
+(mean cv num)
+(if (<= cv 0)
+    (error "Multi-Unit Gamma CV given a coefficient of variation <= 0. Unable to continue."))
+(let ((sum 0) (mean2 (if (> num 0) (/ mean num) 0)))
+  (dotimes (x num sum)
+    (setf sum (+ sum (call-distribution "Gamma CV" mean2 cv)))))
+) ; end lambda
+) ; end defdist

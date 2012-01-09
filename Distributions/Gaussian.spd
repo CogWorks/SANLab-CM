@@ -1,0 +1,36 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defdist "Gaussian"
+"Returns a random value drawn from a normal distribution specified by the given parameters. Based on the Polar method."
+("Mean" "St. Dev.")
+(nil nil)
+(lambda ; start lambda
+(mean stdev)
+(let* ((X nil)
+       (Y nil)
+       (R2 nil))
+  (loop
+   (setf X (- (* 2 (random 1.0)) 1))
+   (setf Y (- (* 2 (random 1.0)) 1))
+   (setf R2 (+ (* X X) (* Y Y)))
+   (when (and (not (= r2 0)) (< R2 1)) (return)))
+  (+ mean (* stdev (* (sqrt (* -2 (/ (log R2) R2))) Y))))
+) ; end lambda
+) ; end defdist

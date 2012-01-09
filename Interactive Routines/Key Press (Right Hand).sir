@@ -1,0 +1,67 @@
+#|
+Copyright © 2007-2009 Evan W. Patton
+
+This file is part of SANLab-CM.
+
+SANLab-CM is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
+|#
+
+(defroutine
+"Key Press (Right Hand)"
+#(:RGB 0.7 0.0 0.0)
+(deftask
+1
+"Initiate Key Press"
+"Cognitive Operator"
+"Gaussian CV"
+'("50" "(random 0.1 1.0 1)")
+0 100
+nil '(2))
+(deftask
+2
+"Home to"
+"Right Hand Operator"
+"Gamma CV"
+'("200" "(random 0.1 1.0 1)")
+200 200
+'(1) '(3)
+:measurable t)
+(deftask
+3
+"Key Down"
+"Right Hand Operator"
+"Gamma CV"
+'("70" "(random 0.1 1.0 1)")
+400 200
+'(2) '(4 5)
+:measurable t)
+(deftask
+4
+"Key Up"
+"Right Hand Operator"
+"Gamma CV"
+'("0" "(random 0.1 1.0 1)")
+600 200
+'(3) nil
+:measurable t)
+(deftask
+5
+"System Response"
+"System Resource"
+"Gaussian CV"
+'("0" "(random 0.1 1.0 1)")
+600 0
+'(3) nil
+:measurable t)
+)
