@@ -631,6 +631,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
         (ignore-errors (multiple-value-bind (x y) (capi:current-pointer-position :relative-to self)
                          (capi:apply-in-pane-process self #'activity-layout-mouse-drag self x y)
                          ))
+      (declare (ignore val))
       (if err (return))))
 )
 

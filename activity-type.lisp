@@ -20,6 +20,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 ; Activities
 
 ; The activity type class
+#|
 (defclass activity-type ()
   ((symname :initform nil
             :initarg :symname
@@ -47,6 +48,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
           :accessor color))
   (:documentation "Encapsulates an activity type, including the default distribution and parameters")
 )
+|#
 
 ; This macro wraps the creation of an activity type with set parameters.
 ; Used by sat files to create activity types
@@ -160,7 +162,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
                      :instname (read-from-string (fifth part))
                      :extra (read-from-string (sixth part))
                      :distribution (read-from-string (seventh part))
-                     :dist-params (read-from-string (eighth part))
+                     :default-params (read-from-string (eighth part))
                      :color (read-from-string (ninth part)))
     nil))
 
@@ -255,7 +257,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
   (abbreviated-name (pointer at)))
 
 (let ((operator-regex (precompile-regexp " Operator")))
-
+  (declare (ignore operator-regex))
 ; Abbreviates the name of an operator into all caps
 ; E.g. "Cognitive Operator" ==> "CO"
 ; "Perceptual Operator (Visual)" ==> "PO(V)"

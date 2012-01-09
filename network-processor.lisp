@@ -77,6 +77,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
       (if (< (end-time max-parent) (end-time node)) (setf max-parent node)))))
 
 (defun get-longest-path (source target)
+  (declare (ignore source))
   (let ((path (list target)))
     (do ((node (slowest-parent target) (slowest-parent node)))
         ((null node) path)
@@ -106,6 +107,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
                                                   (if (>= x 0)
                                                       x
                                                     0))))
+                  (declare (ignore success))
                   (if error
                       (progn
                         ;(break)
@@ -158,7 +160,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 (defun compute-mean-durations (activities target trials path path-counter)
   (let ((denominator (float (/ 1 trials)))
         (total-time (end-time target)))
-
+    (declare (ignore total-time))
     (dolist (activity activities)
       (let* ((start-time (start-time activity))
              (end-time (end-time activity)))
@@ -256,9 +258,8 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
           (ignore-errors
             (generate-sample-times activities)
             (setf source (first source))
-            (setf target (first target))
-            
-            )
+            (setf target (first target)))
+        (declare (ignore success))
         (cond (error
                (if callback (apply callback (list 'error error)))
                (stop-processor np)

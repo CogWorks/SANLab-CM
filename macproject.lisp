@@ -137,7 +137,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 
 (defun hash-table-to-list (table)
   (let ((all-entries '()))
-    (maphash #'(lambda (key value) (push value all-entries)) table)
+    (maphash #'(lambda (key value) (declare (ignore key)) (push value all-entries)) table)
     all-entries))
 
 (defun find-component-in-list (id lst)
@@ -240,24 +240,13 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
       (if (>= (graph-node-depth parent) (graph-node-depth node)) (return-from depth-ordered? nil)))))
 
 (defun assign-depth (nodes)
-  (let ((unvisited (list (first nodes)))
-        (temp nil)
-        (final nil))
-    ;(do ((gn (first unvisited) (first (setq unvisited (rest unvisited)))))
-    ;    ((null unvisited) nodes)
-    ;  (if (= -1 (graph-node-depth gn))
-    ;      (progn
-    ;        (let ((choices (cons 0 (mapcar #'(lambda (x) (1+ (graph-node-depth x))) (graph-node-prereqs gn)))))
-    ;          (format t "~A~%" choices)
-    ;          (setf (graph-node-depth gn) (apply #'max choices))
-    ;          (setq unvisited (append unvisited (graph-node-targets gn)))))))
-    (do ()
-        ((depth-ordered? nodes) nodes)
-      (dolist (node nodes)
-        (dolist (parent (graph-node-prereqs node))
-          (if (>= (graph-node-depth parent) (graph-node-depth node))
-              (setf (graph-node-depth node) (1+ (graph-node-depth parent)))))))
-))
+  (do ()
+      ((depth-ordered? nodes) nodes)
+    (dolist (node nodes)
+      (dolist (parent (graph-node-prereqs node))
+        (if (>= (graph-node-depth parent) (graph-node-depth node))
+            (setf (graph-node-depth node) (1+ (graph-node-depth parent)))))))
+  )
 
 (defun order-graph-depth (nodes)
   (sort nodes #'< :key #'graph-node-depth))
@@ -466,7 +455,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
   ((errors :initform nil :initarg :errors :accessor model-errors))
   (:panes
    (error-list capi:list-panel :items nil :accessor model-error-list :visible-min-width 220 :visible-min-height 200)
-   (close-btn capi:push-button :text "Close" :selection-callback #'(lambda (data intf) (capi:destroy intf))))
+   (close-btn capi:push-button :text "Close" :selection-callback #'(lambda (data intf) (declare (ignore data)) (capi:destroy intf))))
   (:layouts
    (main-layout capi:column-layout '(error-list close-btn) :adjust :center))
   (:default-initargs

@@ -17,54 +17,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 |#
 
-; Since the activity pane needs to know about the arrow class
-; define an empty class here that will be overwritten by the
-; arrow.lisp file
-(if (equalp nil (find-class 'arrow nil))
-(defclass arrow () ())
-)
-
-; A pinboard layout that represents an activity node in the graph
-(defclass activity-pane (capi:pinboard-layout)
-  ((expansion-timer-value :initform nil :accessor expansion-timer-value)
-   (collapse-timer-value :initform nil :accessor collapse-timer-value)
-   (expanded :initform nil :reader expanded? :writer expanded)
-   (expandable-p :initform t :reader expandable-p :writer (setf expandable))
-   (dragging? :initform nil :reader is-dragging? :writer (setf dragging))
-   (is-displaying-input-pane :initform nil :reader is-displaying-input-pane? :writer displaying-input-pane)
-   (back-color :initform #(:RGB 1.0 0.7 1.0) :initarg :background-color :accessor background-color)
-   (ir-color :initform nil :initarg :ir-color :accessor ir-color)
-   (is-highlighted :initform nil :reader is-highlighted?); :writer highlight)
-   (is-on-cp :initform nil :reader is-on-critical-path? :writer on-critical-path)
-   (is-in-ir :initform nil :reader is-in-ir? :writer in-interactive-routine)
-   (drawn-background :initform (make-instance 'capi:drawn-pinboard-object :x 0 :y 0 :visible-min-width 200 :visible-min-height 82 :visible-max-height 82) :accessor drawn-background)
-   (name-label :initform (make-instance 'capi:item-pinboard-object :x 10 :y 14 :visible-min-width 180 :visible-max-width 180 :text "Activity Description") :accessor name-label)
-   (name-textbox :initform (make-instance 'capi:text-input-pane :x 8 :y #+win32 12 #+cocoa 1 :visible-min-width 180 :visible-max-width 180 :visible-min-height #+win32 18 #+cocoa 32 :internal-min-height #+win32 18 #+cocoa 32 :external-min-height #+win32 18 #+cocoa 32 :visible-max-height #+win32 18 #+cocoa t :text "Activity Description" :editing-callback #'standard-text-pane-editing-callback) :accessor name-textbox)
-   (dist-label :initform (make-instance 'capi:item-pinboard-object :x 10 :y 34 :visible-min-width 180 :visible-max-width 180 :text "Dist:  Gaussian") :accessor dist-label)
-   (dist-combo :initform (make-distribution-option-pane) :accessor dist-combo)
-   (param-overview-label :initform (make-instance 'capi:item-pinboard-object :x 10 :y 54 :visible-min-width 180 :visible-max-width 180 :text "0, 0") :accessor param-overview-label)
-   (param-labels :initform (build-label-list "Gaussian" (get-param-count "Gaussian") 0) :accessor param-labels)
-   (param-textboxes :initform (build-textbox-list "Gaussian" (get-param-count "Gaussian") 0) :accessor param-textboxes)
-   (param-values :initform '("0" "0") :initarg :param-values :accessor param-values)
-   (visible-params :initform 0 :accessor visible-params)
-   (criticality-pane :initform (make-instance 'capi:drawn-pinboard-object :x 0 :y 0 :visible-min-width 200 :visible-min-height 82 :visible-max-height 82 :display-callback #'render-criticality) :accessor criticality-pane)
-   (stored-x :initform nil :accessor stored-x)
-   (stored-y :initform nil :accessor stored-y)
-   (edges-in :initform nil :accessor edges-in)
-   (edges-out :initform nil :accessor edges-out)
-   (moved-pixels :initform nil :accessor moved-pixels)
-   (source :initform nil :initarg :source :accessor source)
-   (expansion-process :initform nil :accessor expansion-process)
-   (collapse-process :initform nil :accessor collapse-process)
-   (distribution :initform nil :initarg :distribution :accessor distribution))
-  (:default-initargs
-   :visible-min-width 200
-   :visible-min-height 82
-   :visible-max-height 82
-   :input-model *activity-pane-input-model*)
-  (:documentation "A visual representation of an activity network node in the editor")
-)
-
 ; Updates the activity pane from the underlying model
 (defmethod update-activity-pane ((self activity-pane))
   "Updates the activity pane from the underlying model"
