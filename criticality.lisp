@@ -37,8 +37,8 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
       (setf (gethash key (ct-table ct)) 1)
     (incf (gethash key (ct-table ct)))))
 
-(defun display-criticality-window (ct model)
-  (make-instance 'criticality-window :criticality-tracker ct :model model))
+(defun display-criticality-window (ct)
+  (make-instance 'criticality-window :criticality-tracker ct))
 
 (defun print-criticality-data (item)
   (list (format nil "~2,2f%" (* 100 (first item)))
