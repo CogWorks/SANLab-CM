@@ -12,19 +12,24 @@
            (processor-constraints p))
 )
 
+(let ((the-processor (gensym)))
+
 (defmacro defprocessor (name &body body)
-  (let ((the-processor (gensym)))
   `(let (,the-processor)
+     (declare (special ,name))
      (bootstrap)
      (defvar ,name nil)
-     (defun get-processor () ,the-processor)
      (setf ,the-processor
            (let ((the-processor (make-instance (quote processor))))
              ,@body
              (prepare-processor the-processor)
              the-processor))
-     (setf ,name ,the-processor)))
+     (setf ,name ,the-processor))
   )
+
+(defun get-processor () `,the-processor)
+
+)
 
 (defmacro defconstraint (name &rest args &key constraint-type (type 'resource-constraint) &allow-other-keys)
   (let ((args (remove-pair args :constraint-type)))

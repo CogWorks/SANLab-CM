@@ -1,5 +1,6 @@
 (defparameter *debug-calibrate* nil)
-(defparameter *save-dir* "~/sanlab/Models/search/")
+(defparameter *save-dir* "~/sanlab/Models/temp/")
+(defparameter *limit-data-ingest* t)
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -67,6 +68,7 @@
              (cond ((equal (parser-click-state parser) 'click)
                     (setf args (make-hash-table))
                     (setf (gethash :end args) (+ (second event) (sixth event)))
+                    (setf *insert-items* nil)
                     (cond ((< 0 (parser-last-button parser))
                            (setf (gethash 'valid-trial args) t)
                            (setf (gethash 'condition args) (aref *the-mapping*
@@ -77,9 +79,9 @@
                     (setf (parser-last-button parser) (- (ninth event) 80000))
                     (setf (parser-click-state parser) 'ended)
                     (return (values 'end-trial args)))
-                   ;((<= 15 (parser-trial parser))
-                   ; (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
-                   ; )
+                   ((and *limit-data-ingest* (<= 15 (parser-trial parser)))
+                    (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                    )
                    ((equal (third event) 'URLStart)
                     (setf args (make-hash-table))
                     (setf (gethash :start args) (second event))
@@ -176,12 +178,12 @@
                (return 'continue))))))
 )
 
-(defun run-calibrate (mouse eye &optional ht)
+(defun run-calibrate (mouse eye &optional ht (merge t))
   (reset-processor (get-processor))
   (let ((parser (make-instance 'calib-parser
                                :event-stream (open mouse)
                                :fixation-stream (open eye))))
-    (let ((result (if ht (run-protocol-analysis parser :trials ht) (run-protocol-analysis parser))))
+    (let ((result (if ht (run-protocol-analysis parser :merge-trials merge :trials ht) (run-protocol-analysis parser :merge-trials merge))))
       (close (parser-event-stream parser))
       (close (parser-fixation-stream parser))
       (values result parser))))
@@ -226,6 +228,11 @@
             subjects)
     (save-models ht "AGG")))
 
+(defun run-one-subject (&optional (s 701))
+  (multiple-value-bind (mouse eye) (get-subject-files s)
+    (save-models (run-calibrate mouse eye nil nil) (format nil "P~A" s))))
+                  
+
 (defparameter *areas-of-interest*
   '((tgt1 . (:rectangle 23 34 27 22))
     (tgt2 . (:rectangle 495 34 27 22))
@@ -257,3 +264,6 @@
                     :event-id (3)
                     :distribution "Constant"))
 ))
+
+(defparameter *interrupts*
+  '(("System Resource" "Perceptual Operator")))
