@@ -134,8 +134,10 @@ http://www.cogsci.rpi.edu/cogworks/
 (defmethod y-position ((src instance-pointer))
   (stored-y (pointer src)))
 
+#|
 (defmethod on-critical-path? ((src instance-pointer))
   (on-critical-path? (pointer src)))
+|#
 
 (defmethod (setf on-critical-path?) :after (val (src graph-node))
 ;  (debug "Firing event listener 'activity-on-critical-path for ~A...~%" src)
