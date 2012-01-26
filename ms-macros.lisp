@@ -1,3 +1,6 @@
+(defmacro megabytes (n)
+  (* n 1024 1024))
+
 (defmethod prepare-processor ((p processor))
   (maphash #'(lambda (name items)
                (declare (ignore name))
@@ -12,22 +15,23 @@
            (processor-constraints p))
 )
 
-(let ((the-processor (gensym)))
+(let (the-processor)
+
+(defun set-processor (x) (setf the-processor x))
 
 (defmacro defprocessor (name &body body)
-  `(let (,the-processor)
+  `(prog ()
      (declare (special ,name))
      (bootstrap)
-     (defvar ,name nil)
-     (setf ,the-processor
-           (let ((the-processor (make-instance (quote processor))))
-             ,@body
-             (prepare-processor the-processor)
-             the-processor))
-     (setf ,name ,the-processor))
+     (set-processor
+      (let ((the-processor (make-instance (quote processor))))
+        ,@body
+        (prepare-processor the-processor)
+        the-processor))
+     (setf ,name (get-processor)))
   )
 
-(defun get-processor () `,the-processor)
+(defun get-processor () the-processor)
 
 )
 

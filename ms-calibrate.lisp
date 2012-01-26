@@ -1,6 +1,7 @@
 (defparameter *debug-calibrate* nil)
 (defparameter *save-dir* "~/sanlab/Models/temp/")
-(defparameter *limit-data-ingest* t)
+(defparameter *limit-data-ingest* nil)
+(defparameter *ignore-subjects* '(703))
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -89,6 +90,8 @@
                     (setf (parser-last-button parser) 0)
                     (setf (parser-trial parser) 0)
                     (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                    (format t "Parse item at ~A~%" (second event))
+                    (finish-output *standard-output*)
 
                     (return (values 'start-trial args)))
                    ((equal (parser-click-state parser) 'ended)
@@ -103,6 +106,8 @@
                     (setf (gethash 'valid-trial args) nil)
 
                     (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                    (format t "Parse item at ~A~%" (second event))
+                    (finish-output *standard-output*)
 
                     (return (values 'end-trial args)))
                    ((equal (third event) 'mouseMvmt)
@@ -115,6 +120,8 @@
                       (setf (gethash :label args) (format nil "(~A, ~A)" (fourth event) (fifth event))))
 
                     (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                    (format t "Parse item at ~A~%" (second event))
+                    (finish-output *standard-output*)
                     (print-if *debug-calibrate* "Processed mouse movement~%")
 
                     (if args
@@ -136,13 +143,18 @@
                            (incf (parser-trial parser))
                            (print-if *debug-calibrate* "Processed mouse click~%"))
                           (t
-                           (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))))
+                           (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                           (format t "Parse item at ~A~%" (second event))
+                           (finish-output *standard-output*)
+                    ))
 
                     (if args
                         (return (values 'mouse-click args))
                       (return 'continue)))
                    (t
                     (setf (parser-last-event parser) (read-tab-line (parser-event-stream parser)))
+                    (format t "Parse item at ~A~%" (second event))
+                    (finish-output *standard-output*)
 
                     (return 'continue))
                    )
@@ -163,6 +175,9 @@
              (setf (second (parser-last-fixation parser))
                    (floor (/ (second (parser-last-fixation parser)) 1000)))
              (setf fixation (parser-last-fixation parser))
+             (format t "Parse fixation at ~A~%" (second fixation))
+             (finish-output *standard-output*)
+             ;(if (= (second fixation) 589676) (break))
              (do ()
                  ((or (null fixation)
                       (and (numberp (second fixation))
@@ -171,11 +186,15 @@
                      (read-tab-line (parser-fixation-stream parser)))
                (setf (second (parser-last-fixation parser))
                      (floor (/ (second (parser-last-fixation parser)) 1000)))
-               (setf fixation (parser-last-fixation parser)))
+               (setf fixation (parser-last-fixation parser))
+               (format t "Parse next fixation at ~A~%" (second fixation))
+               (finish-output *standard-output*)
+             )
              (print-if *debug-calibrate* "Processed eye movement~%")
-             (if args
+             (if (and (in-trial? (get-processor)) (<= (in-trial? (get-processor)) (second fixation)) args)
                  (return (values 'eg-fixation args))
-               (return 'continue))))))
+               (return 'continue)))
+            (t (break)))))
 )
 
 (defun run-calibrate (mouse eye &optional ht (merge t))
@@ -219,9 +238,12 @@
 )
 
 (defun process-all-files ()
-  (let ((subjects (remove 705 (remove 703 (loop for i from 701 to 717 collect i))))
+  (configure-default-processor)
+  (setf *limit-data-ingest* nil)
+  (let ((subjects (remove-if #'(lambda (x) (member x *ignore-subjects*)) (loop for i from 701 to 717 collect i)))
         (ht (make-hash-table)))
     (mapcar #'(lambda (i)
+                (format t "Processing subject ~A~%" i)
                 (multiple-value-bind (mouse eye) (get-subject-files i)
                   (save-models (run-calibrate mouse eye) (format nil "P~A" i))
                   (run-calibrate mouse eye ht)))
@@ -229,6 +251,8 @@
     (save-models ht "AGG")))
 
 (defun run-one-subject (&optional (s 701))
+  (configure-default-processor)
+  (setf *limit-data-ingest* nil)
   (multiple-value-bind (mouse eye) (get-subject-files s)
     (save-models (run-calibrate mouse eye nil nil) (format nil "P~A" s))))
                   

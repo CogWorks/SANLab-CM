@@ -2,6 +2,18 @@
   (break)
 )
 
+(defmethod (setf resource-queue-tree) :before ((val number) (queue resource-queue))
+  (break)
+)
+
+(defmethod (setf resource-dependents) :before ((val list) (res resource))
+  (if (find-if #'(lambda (x) (path-between-nodes? x res #'resource-dependents))
+               val) (break)))
+
+(defmethod (setf resource-predecessors) :before ((val list) (res resource))
+  (if (find-if #'(lambda (x) (path-between-nodes? x res #'resource-predecessors))
+               val) (break)))
+
 (defmethod reset-queue ((queue resource-queue))
   (setf (resource-queue-tree queue) nil))
 
@@ -103,7 +115,8 @@
                  (resource-iroutine-task act2) (resource-iroutine-task act1)
                  (resource-queue-number act2) (resource-queue-number act1)
                  (resource-label act2) (resource-label act1)
-                 (resource-dependents act2) (resource-dependents act1)
+                 (resource-distribution act2) (resource-distribution act1)
+                 (resource-dependents act2) (copy-list (resource-dependents act1))
                  (resource-predecessors act2) (list item act1))
            (if (valid-time? (resource-end-time act1))
                (setf (resource-end-time act1) (best-end-time item)))
@@ -114,10 +127,14 @@
            (compute-duration act1)
            (compute-duration act2)
            (setf (resource-dependents act1) (list act2))
+           (dolist (x (resource-dependents act2))
+             (setf (resource-predecessors x) (substitute act2 act1 (resource-predecessors x))))
            (push act2 (resource-dependents item))
-           (schedule-resource act2 (best-queue-for-resource (get-processor) (resource-type act2) act2))
+           (cons act1 (cons act2 (cdr queue)))
            ))
-        (t queue))
+        (t
+         (setf (cdr queue) (scan-and-split item (cdr queue)))
+         queue))
 )
 
 (defmethod scan-and-split ((item resource) (queue resource-queue))
@@ -181,6 +198,7 @@
                       (return queue)))))                 
         finally (return (first (gethash type (processor-queues proc))))))
 
+#|
 (defun enumerate-helper (root)
   (if (and root (not (rbt:rbt-null root))) (append (enumerate-helper (rbt::left root))
                                                    (list (rbt::node-item root))
@@ -190,5 +208,4 @@
 (defmethod enumerate ((queue resource-queue))
   (enumerate-helper (resource-queue-tree queue))
 )
-
-
+|#
