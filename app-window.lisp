@@ -126,5 +126,5 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
              ((not success) ;; Cancel
               (return-from confirm-quit))
              (result
-              (save-model-action interface))))))
+              (save-model-action (controller (view-controller interface))))))))
     (quit)))
