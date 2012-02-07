@@ -1531,7 +1531,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
             (setf (end-time buf) (reduce 'min (mapcar #'start-time (dependents buf)))))
 	(let* ((duration (round (* 1000 (- (end-time buf) (start-time buf)))))
 	       (use-gaussian (and *cogtool-trace* (not (zerop duration)))))	  
-          (setf use-gaussian nil)
+;          (setf use-gaussian nil)
 	  (setf (gethash (uid buf) ht)
 		(make-instance 'graph-node
 			       :uid (uid buf)
@@ -1539,7 +1539,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
 			       :label (label buf)
 			       :stored-x (x-pos buf)
 			       :stored-y (y-pos buf)
-			       :distribution (get-distribution-by-typename (if use-gaussian "Gaussian CV" "Constant"))
+			       :distribution (get-distribution-by-typename (if use-gaussian "Gamma CV" "Constant"))
 			       :parameters (cons
 					    (format nil "~A" duration)
 					    (and use-gaussian '("(random 0.1 1.0 1)")))
