@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$1" -eq "" ]]
+if [[ "$1" == "" ]]
 then
     echo "You should specify a tag message"
     echo "Usage: $0 'your message here'"
@@ -14,4 +14,6 @@ MINOR=0
 REVISION=`cat CURRENT_REVISION`
 REVISION=$(($REVISION+1))
 echo $REVISION > CURRENT_REVISION
+git add CURRENT_REVISION
+git commit -m "Tagging revision $REVISION"
 git tag -s "v${MAJOR}.${MINOR}.${REVISION}" -m "$1"
