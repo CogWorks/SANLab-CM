@@ -1377,6 +1377,19 @@ Finds the model inside of the target lisp file. This expects the model to be def
         (push (buffer-of-interest 'frame) (dependents *start-node*)))
 ))
 
+(defmethod processed-trace-object :after ((time number) (module (eql 'cogtool)) (action (eql 'start-system-wait)) &rest extras)
+  (let ((last-act (buffer-of-interest 'frame))
+        (duration (first extras)))
+    (assert (numberp duration) (duration))
+    (if last-act
+        (setf (end-time last-act) (+ (start-time last-act) duration))
+      (setf (buffer-of-interest 'frame)
+            (make-instance 'frame-buffer-action
+                           :start-time time
+                           :end-time (+ time duration)
+                           :name (second extras)
+                           :label (second extras))))))
+
 (defmethod processed-trace-object :after ((time number) (module (eql 'cogtool)) (action (eql 'device-move-cursor-to)) &rest extras)
   (let ((last-act (buffer-of-interest 'cogtool)))
     (setf (buffer-of-interest 'cogtool) (make-instance 'buffer-action
