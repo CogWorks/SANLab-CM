@@ -1,0 +1,4 @@
+SANLab-CM is a software package that allows individuals familiar with CPM-GOMS
+style modeling to produce stochastic critical paths for CPM-GOMS models. It 
+also provides a number of features to import data from other systems including
+ACT-R and CogTool.
