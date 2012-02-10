@@ -560,6 +560,25 @@ Finds the model inside of the target lisp file. This expects the model to be def
                  (print-trace "Testing frame~%")
                  (cond ((and (buffer-of-interest 'frame) (equal (value x) (name (buffer-of-interest 'frame))))
                         (push-if-no-path (buffer-of-interest 'frame) (buffer-of-interest 'production)))))
+                ((equal (buffer x) 'visual)
+                 (print-trace "Testing visual state~%")
+                 (cond ((equal (value x) 'free)
+                        (if (buffer-of-interest 'visual-motor)
+                            (push (buffer-of-interest 'production)
+                                  (dependents (buffer-of-interest 'visual-motor)))))
+                       ((equal (value x) 'busy)
+                        (push (buffer-of-interest 'production)
+                              (dependents (buffer-of-interest 'visual-motor)))
+                        (let* ((obj (buffer-of-interest 'visual-motor))
+                               (new-obj (make-instance 'buffer-action
+                                                       :start-time time
+                                                       :end-time (end-time obj)
+                                                       :label (format nil "continue ~A" (label obj))
+                                                       :operator-type (operator-type obj)
+                                                       :action-type (action-type obj))))
+                          (setf (end-time obj) time)
+                          (push new-obj (dependents obj))
+                          (setf (buffer-of-interest 'visual-motor) new-obj)))))
                 ((equal (check-on x) 'state)
                  (print-trace "Testing state~%")
                  (cond ((equal (value x) 'free)
@@ -680,6 +699,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
 ;;;  These functions handle actions through the vision module
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defparameter *last-eye-movement* nil)
+(defparameter *last-eye-prep* nil)
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'vision)) (action (eql 'set-buffer-chunk)) &rest extras)
   (cond ((equal (first extras) 'visual-location)
@@ -714,6 +734,11 @@ Finds the model inside of the target lisp file. This expects the model to be def
   (let ((last-act (buffer-of-interest 'visual-motor)))
     (setf (buffer-of-interest 'visual-motor) (make-instance 'buffer-action :created-by-action action))
     (if last-act (push (buffer-of-interest 'visual-motor) (dependents last-act)))
+    ; check for non-production causes
+    (let ((system (or (buffer-of-interest 'system) (buffer-of-interest 'frame))))
+      (cond ((and system (= (end-time system) time))
+             (push system (prerequisites (buffer-of-interest 'visual-motor)))
+             (push (buffer-of-interest 'visual-motor) (dependents system)))))
     (setf (operator-type (buffer-of-interest 'visual-motor)) "Eye Movement Operator")
     (setf (label (buffer-of-interest 'visual-motor)) (format nil "~{~A ~}" (remove-if-not 'symbolp extras)))
     (setf (start-time (buffer-of-interest 'visual-motor)) time)
@@ -721,16 +746,35 @@ Finds the model inside of the target lisp file. This expects the model to be def
         (push (buffer-of-interest 'visual-motor) (dependents (buffer-of-interest 'production)))))
 )
 
+(defmethod processed-trace-object :after ((time number) (module (eql 'vision))
+                                          (action (eql 'move-attention-attended-loc)) &rest extras)
+  (let ((last-act (buffer-of-interest 'visual-motor)))
+    (setf (buffer-of-interest 'visual-motor) (make-instance 'buffer-action :created-by-action 'move-attention))
+    (if last-act (push (buffer-of-interest 'visual-motor) (dependents last-act)))
+    ; check for non-production causes
+    (let ((system (or (buffer-of-interest 'system) (buffer-of-interest 'frame))))
+      (cond ((and system (= (end-time system) time))
+             (push system (prerequisites (buffer-of-interest 'visual-motor)))
+             (push (buffer-of-interest 'visual-motor) (dependents system)))))
+    (setf (operator-type (buffer-of-interest 'visual-motor)) "Eye Movement Operator")
+    (setf (label (buffer-of-interest 'visual-motor)) (format nil "~{~A ~}" (remove-if-not 'symbolp extras)))
+    (setf (start-time (buffer-of-interest 'visual-motor)) time)
+    (if (and (buffer-of-interest 'production) (= 0 (depth (buffer-of-interest 'production))))
+        (push (buffer-of-interest 'visual-motor) (dependents (buffer-of-interest 'production)))))
+  )
+
 (defmethod processed-trace-object :after ((time number) (module (eql 'vision)) (action (eql 'prepare-eye-movement)) &rest extras)
   (multiple-value-bind (id extras) (strip-move-id extras)
     (declare (ignore id extras))
     (let ((last-act (buffer-of-interest 'visual-motor)))
       (cond ((and last-act (eq (created-by-action last-act) 'move-attention))
-             (setf (label last-act) (format nil "prep - ~A" (label last-act))))
+             (setf (label last-act) (format nil "prep - ~A" (label last-act)))
+             )
             ((and last-act (eq (created-by-action last-act) 'complete-eye-movement))
              (setf (buffer-of-interest 'visual-motor) (make-instance 'buffer-action :created-by-action action))
              (setf (operator-type (buffer-of-interest 'visual-motor)) "Eye Movement Operator")
-             (setf (label (buffer-of-interest 'visual-motor)) (format nil "prep~A" (subseq (label last-act) (min 4 (length (label last-act))))))
+             (setf (label (buffer-of-interest 'visual-motor))
+                   (format nil "prep~A" (subseq (label last-act) (min 4 (length (label last-act))))))
              (setf (start-time (buffer-of-interest 'visual-motor)) time)
              (push (buffer-of-interest 'visual-motor) (dependents last-act))
              )
@@ -742,9 +786,11 @@ Finds the model inside of the target lisp file. This expects the model to be def
     (declare (ignore id extras))
     (let ((last-act (buffer-of-interest 'visual-motor)))
       (setf (buffer-of-interest 'visual-motor) (make-instance 'buffer-action :start-time time :operator-type "Eye Movement Operator"))
+      (setf *last-eye-movement* (buffer-of-interest 'visual-motor))
       (cond (last-act
              (setf (end-time last-act) time)
              (setf (label (buffer-of-interest 'visual-motor)) (format nil "move~A" (subseq (label last-act) (min 4 (length (label last-act))))))
+             (setf *last-eye-prep* last-act)
              (push (buffer-of-interest 'visual-motor) (dependents last-act)))))))
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'vision)) (action (eql 'complete-eye-movement)) &rest extras)
@@ -759,13 +805,14 @@ Finds the model inside of the target lisp file. This expects the model to be def
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'vision)) (action (eql 'encoding-complete)) &rest extras)
   (cond (; check for EMMA eye movements
-         *last-eye-movement*
-         (let ((obj (make-instance 'buffer-action :start-time (end-time *last-eye-movement*) :end-time time :operator-type "Perceptual Operator (Visual)" :label (format nil "Perceive ~{~A ~}" extras))))
+         *last-eye-prep*
+         (let ((obj (make-instance 'buffer-action :start-time (end-time *last-eye-prep*) :end-time time :operator-type "Perceptual Operator (Visual)" :label (format nil "Perceive ~{~A ~}" extras))))
            (if (buffer-of-interest 'visual) (push obj (dependents (buffer-of-interest 'visual))))
            (cond ((buffer-of-interest 'frame)
                   (push obj (dependents (buffer-of-interest 'frame)))
                   ))
-           (push obj (dependents *last-eye-movement*))
+           (push obj (dependents *last-eye-prep*))
+           (push *last-eye-prep* (prerequisites obj))
            (setf (buffer-of-interest 'visual) obj)))
         (; potentially traditional ACT-R vision module
          (buffer-of-interest 'visual-motor)
@@ -1552,10 +1599,27 @@ Finds the model inside of the target lisp file. This expects the model to be def
 			       :label (label buf)
 			       :stored-x (x-pos buf)
 			       :stored-y (y-pos buf)
-			       :distribution (get-distribution-by-typename (if use-gaussian "Gamma CV" "Constant"))
+			       :distribution (get-distribution-by-typename
+                                              (cond ((and use-gaussian
+                                                          (equal (operator-type buf) "Cognitive Operator")
+                                                          (<= 100.0 duration)
+                                                          )
+                                                     "Multi-Unit Gamma CV")
+                                                    (use-gaussian
+                                                     "Gamma CV")
+                                                    (t "Constant")))
 			       :parameters (cons
 					    (format nil "~A" duration)
-					    (and use-gaussian '("(random 0.1 1.0 1)")))
+					    (cond ((and use-gaussian
+                                                        (equal (operator-type buf) "Cognitive Operator")
+                                                        (<= 100.0 duration))
+                                                   (list "0.29" (format nil "~A" (floor (/ duration (read-from-string (first (default-params (get-activity-by-typename "Cognitive Operator"))))))))
+                                                   )
+                                                  ((and use-gaussian (equal (operator-type buf) "Cognitive Operator"))
+                                                   '("0.29"))
+                                                  (use-gaussian
+                                                   '("(random 0.1 1.0 1)"))
+                                                  (t nil)))
 			       :color (get-color (get-activity-by-typename (operator-type buf))))))
         (dolist (dep (dependents buf))
           (build-activities dep ht)
@@ -1758,4 +1822,5 @@ Finds the model inside of the target lisp file. This expects the model to be def
   (setf *vocal-events* nil)
   (setf *manual-events* nil)
   (setf *last-eye-movement* nil)
+  (setf *last-eye-prep* nil)
 )
