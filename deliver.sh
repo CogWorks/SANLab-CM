@@ -8,7 +8,7 @@ CONTENTS=${SANLABCM}SANLab-CM.app/Contents/
 RESOURCES=${CONTENTS}Resources/
 
 echo "Updating revision info..."
-REVISION=`git tag | cut -f 3 -d .`
+REVISION=`git tag | cut -f 3 -d . | tail -n 1`
 #REVISION=`svn info http://cwl-projects.cogsci.rpi.edu/svn/SANLab/v3.0/ | grep Revision | cut -d" " -f 2`
 echo $REVISION > CURRENT_REVISION
 
