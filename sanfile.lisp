@@ -63,6 +63,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
     (with-open-file (stream dest-path :direction :input :external-format '(:latin-1 :eol-style #+win32 :crlf #-win32 :lf))
       (setf *random-state* (read stream)))))
 
+#|
 (defun copy-file (src dest)
   (with-open-file (in src :element-type '(unsigned-byte 8) :external-format '(:latin-1 :eol-style #+win32 :crlf #-win32 :lf))
     (with-open-file (out dest :element-type '(unsigned-byte 8)
@@ -73,6 +74,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
             while byte
             do
             (write-byte byte out)))))
+|#
 
 (defun get-bundle-name (filename)
   (let* ((str (format nil "~A" filename))
