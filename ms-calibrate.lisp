@@ -1,7 +1,8 @@
 (defparameter *debug-calibrate* nil)
-(defparameter *save-dir* "~/sanlab/Models/temp/")
+(defparameter *save-dir* "~/sanlab/Models/IBM/")
 (defparameter *limit-data-ingest* nil)
 (defparameter *ignore-subjects* '(703))
+(defparameter *segment* t) ; change to nil for full aggregate models
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -72,9 +73,11 @@
                     (setf *insert-items* nil)
                     (cond ((< 0 (parser-last-button parser))
                            (setf (gethash 'valid-trial args) t)
-                           (setf (gethash 'condition args) (aref *the-mapping*
-                                                                 (1- (parser-last-button parser))
-                                                                 (1- (- (ninth event) 80000)))))
+                           (setf (gethash 'condition args) (if *segment*
+                                                               (aref *the-mapping*
+                                                                     (1- (parser-last-button parser))
+                                                                     (1- (- (ninth event) 80000)))
+                                                             'all)))
                           (t
                            (setf (gethash 'valid-trial args) nil)))
                     (setf (parser-last-button parser) (- (ninth event) 80000))
