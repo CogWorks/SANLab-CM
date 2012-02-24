@@ -340,7 +340,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
           (if (eql (car (first pair)) buffer)
               (progn
                 (print-trace "Firing post-buffer watch for ~A~%" buffer)
-                (push val (dependents (second pair))))))
+                (pushnew val (dependents (second pair))))))
         (setf *watches-after* (remove buffer *watches-after* :key #'(lambda (x) (car (first x)))))))
   (if val
       (progn
