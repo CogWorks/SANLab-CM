@@ -296,7 +296,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
 
 (defmethod add-buffer-of-interest ((buffer symbol))
   (setf (gethash buffer *buffers*) (make-hash-table))
-  (setf (gethash buffer *history*) (make-hash-table))
+  (setf (gethash buffer *history*) nil)
 )
 
 (defmethod buffer-of-interest ((buffer symbol) &key (index 0))
@@ -716,7 +716,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
              (setf (buffer-of-interest 'visual-location) (make-instance 'buffer-action))
              (setf (start-time (buffer-of-interest 'visual-location)) time)
              (setf (end-time (buffer-of-interest 'visual-location)) time)
-             (setf (label (buffer-of-interest 'visual-location)) (format nil "~A" (second extras)))
+             (setf (label (buffer-of-interest 'visual-location)) (format nil "Set-buffer-chunk ~A" (second extras)))
              (if (= 0 (depth (buffer-of-interest 'production))) (push (buffer-of-interest 'visual-location) (dependents (buffer-of-interest 'production))))
 )))))
 
@@ -815,13 +815,26 @@ Finds the model inside of the target lisp file. This expects the model to be def
            (push *last-eye-prep* (prerequisites obj))
            (setf (buffer-of-interest 'visual) obj)))
         (; potentially traditional ACT-R vision module
-         (buffer-of-interest 'visual-motor)
+         (and (buffer-of-interest 'visual-motor)
+              ; If these are equal we've already done this bit. Don't repeat.
+              (not (eq (buffer-of-interest 'visual-motor) (buffer-of-interest 'visual))))
          (let ((last-act (buffer-of-interest 'visual-motor)))
            (setf (end-time last-act) time)
            (setf (operator-type last-act) "Perceptual Operator (Visual)")
            (setf (label last-act) (format nil "Perceive~{ ~A~}" extras))
            (if (buffer-of-interest 'frame) (push last-act (dependents (buffer-of-interest 'frame))))
            (setf (buffer-of-interest 'visual) last-act)))
+        (; potentially traditional ACT-R vision module redux
+         (and (buffer-of-interest 'visual-motor)
+              (eq (buffer-of-interest 'visual-motor) (buffer-of-interest 'visual))
+              (buffer-of-interest 'frame))
+         (let ((obj (make-instance 'buffer-action :start-time (end-time (buffer-of-interest 'frame)) :end-time time :operator-type "Perceptual Operator (Visual)" :label (format nil "Perceive ~{~A ~}" extras))))
+           (setf (created-by-action obj) 'transition-to)
+           (pushnew obj (dependents (buffer-of-interest 'frame)))
+           (pushnew obj (dependents (buffer-of-interest 'visual-motor)))
+           (pushnew obj (dependents (buffer-of-interest 'visual)))
+           (setf (buffer-of-interest 'visual-motor) obj)
+           (setf (buffer-of-interest 'visual) obj)))
            
         ))
 
@@ -874,13 +887,22 @@ Finds the model inside of the target lisp file. This expects the model to be def
 |#
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'vision)) (action (eql 'no)) &rest extras)
-  (if (buffer-of-interest 'visual)
-      (progn
-        (if (buffer-of-interest 'frame) 
-            (setf (dependents (buffer-of-interest 'frame))
-                  (remove (buffer-of-interest 'visual) (dependents (buffer-of-interest 'frame)))))
-        (setf (label (buffer-of-interest 'visual)) "Perceive Blank")
-        (setf (action-type (buffer-of-interest 'visual)) 'failure))))
+  (cond ((and (buffer-of-interest 'visual)
+              (not (starts-with (label (buffer-of-interest 'visual)) "Perceive")))
+         (if (buffer-of-interest 'frame) 
+             (setf (dependents (buffer-of-interest 'frame))
+                   (remove (buffer-of-interest 'visual) (dependents (buffer-of-interest 'frame)))))
+         (setf (label (buffer-of-interest 'visual)) "Perceive Blank")
+         (setf (action-type (buffer-of-interest 'visual)) 'failure))
+        ((and (buffer-of-interest 'visual)
+              (equal (created-by-action (buffer-of-interest 'visual)) 'transition-to))
+         (setf (label (buffer-of-interest 'visual)) "Perceive Blank")
+         (setf (action-type (buffer-of-interest 'visual)) 'failure))
+        ((and (buffer-of-interest 'visual) (buffer-of-interest 'frame))
+         (let ((obj (make-instance 'buffer-action :start-time (end-time (buffer-of-interest 'frame)) :end-time time :operator-type "Perceptual Operator (Visual)" :label (format nil "Perceive Blank"))))
+           (setf (buffer-of-interest 'visual) obj)
+           (pushnew obj (dependents (buffer-of-interest 'frame)))
+           (setf (action-type (buffer-of-interest 'visual)) 'failure)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;              ***      AUDIO      ***                 
