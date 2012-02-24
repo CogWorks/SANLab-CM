@@ -318,10 +318,10 @@ Finds the model inside of the target lisp file. This expects the model to be def
 (defmethod (setf buffer-of-interest) :before (val (buffer symbol) &key (index 0))
   (if (and val (listp val)) (break))
   (if (buffer-of-interest buffer :index index)
-      (push (buffer-of-interest buffer :index index) (gethash buffer *history*)))
+      (pushnew (buffer-of-interest buffer :index index) (gethash buffer *history*)))
   (dolist (pair *watches-before*)
     (if (and (eql (first pair) buffer) (buffer-of-interest buffer :index index))
-        (push (buffer-of-interest (second pair) :index index) (dependents (buffer-of-interest buffer :index index)))))
+        (pushnew (buffer-of-interest (second pair) :index index) (dependents (buffer-of-interest buffer :index index)))))
   (setf *watches-before* (remove buffer *watches-before* :key #'first)))
 
 (defmethod (setf buffer-of-interest) :before (val (buffer (eql 'production)) &key (index 0))
