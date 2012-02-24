@@ -1282,7 +1282,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
     (let ((last-act (buffer-of-interest 'manual :index id)))
       (setf (end-time last-act) time)
       (setf (buffer-of-interest 'manual :index id) (make-instance 'manual-buffer-action
-                                                                  :label (format nil "exec - move to (~a, ~a)" (elt (first extras) 0) (elt (first extras) 1))
+                                                                  :label (format nil "finish~A" (subseq (label last-act) (position #\Space (label last-act))))
                                                                   :start-time time
                                                                   :state 'exec
                                                                   :move-id id
