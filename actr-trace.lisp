@@ -1298,6 +1298,7 @@ Finds the model inside of the target lisp file. This expects the model to be def
 
 (defmethod processed-trace-object :after ((time number) (module (eql 'motor)) (action (eql 'move-cursor-absolute)) &rest extras)
   (multiple-value-bind (id extras) (values (move-id (get-last-mouse-move)) extras)
+    (declare (ignore extras))
     (set-last-processed-motor action id)
     (let ((last-act (buffer-of-interest 'manual :index id)))
       (setf (end-time last-act) time)
