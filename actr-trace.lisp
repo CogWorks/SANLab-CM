@@ -816,14 +816,12 @@ Finds the model inside of the target lisp file. This expects the model to be def
            (setf (buffer-of-interest 'visual) obj)))
         (; potentially traditional ACT-R vision module
          (buffer-of-interest 'visual-motor)
-         (setf (end-time (buffer-of-interest 'visual-motor)) time)
-         (let ((last-act (buffer-of-interest 'visual))
-               (obj (make-instance 'buffer-action :start-time time :end-time time :operator-type "Perceptual Operator (Visual)"
-                                   :label (format nil "Perceive ~A" (first extras)))))
-           (if last-act (push obj (dependents last-act)))
-           (push obj (dependents (buffer-of-interest 'visual-motor)))
-           (if (buffer-of-interest 'frame) (push obj (dependents (buffer-of-interest 'frame))))
-           (setf (buffer-of-interest 'visual) obj)))
+         (let ((last-act (buffer-of-interest 'visual-motor)))
+           (setf (end-time last-act) time)
+           (setf (operator-type last-act) "Perceptual Operator (Visual)")
+           (setf (label last-act) (format nil "Perceive~{ ~A~}" extras))
+           (if (buffer-of-interest 'frame) (push last-act (dependents (buffer-of-interest 'frame))))
+           (setf (buffer-of-interest 'visual) last-act)))
            
         ))
 
