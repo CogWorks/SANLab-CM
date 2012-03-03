@@ -64,6 +64,9 @@
           :documentation "Depth of this resource in the graph, measured from the start node (i.e. the node with no dependencies)")
 ))
 
+(defclass start-resource (resource)
+  ((trial-duration :initform nil :initarg :trial-duration :accessor start-resource-trial-duration)))
+
 (defclass parser ()
   ()
   )

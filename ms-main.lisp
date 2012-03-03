@@ -1,4 +1,4 @@
-(defconstant *stack-warn-limit* (/ (megabytes 64) 4))
+'(defconstant *stack-warn-limit* (/ (megabytes 64) 4))
 (defparameter *warned-about-stack* nil)
 (defparameter *display-type* (get-activity-by-typename "Display Event"))
 (defparameter *interactive* nil)
@@ -296,11 +296,13 @@
       history)))
 
 (defmethod generate-event (symbol start-time end-time &optional info)
+  (declare (special *utilizes*))
   (let ((p (get-processor))
         (type (if (gethash :routine info) :routine :activity)))
     (cond ((and (in-trial? p) (eql type :routine))
            (let* ((routine-name (gethash :routine info))
                   (event-id (gethash :event-id info))
+                  (utilizes (find routine-name (if (boundp '*utilizes*) *utilizes* nil) :test 'equal :key 'car))
                   (iroutine (get-iroutine-by-name routine-name))
                   (routine (build-ir-instance iroutine info)))
              (dolist (id event-id)
@@ -312,6 +314,22 @@
                  (setf (car (resource-parameters item)) (resource-duration item))
                  ))
              (compute-boundaries routine)
+             (if utilizes
+                 (let (acts queues)
+                   (maphash #'(lambda (k v) (declare (ignore k))
+                                (if (null (resource-predecessors v))
+                                    (push v acts)))
+                            routine)
+                   (setf acts (sort acts #'< :key 'best-start-time))
+                   (dolist (act acts)
+                     (dolist (type (cdr utilizes))
+                       (let ((op (get-activity-by-typename type)))
+                         (maphash #'(lambda (k v)
+                                      (if (is-supertype-of? op k)
+                                          (dolist (q v) (push q queues))))
+                                  (processor-queues (get-processor))))
+                       (dolist (queue queues)
+                         (scan-and-split act queue :method :start))))))
              (schedule-iroutine routine p)
              ))
           ((and (in-trial? p) (eql type :activity))
@@ -326,7 +344,7 @@
                                            :start-time start-time
                                            :end-time end-time
                                            :duration (- end-time start-time)
-                                           :parameters (mapcar #'read-from-string (dist-params activity))
+                                           :parameters (mapcar #'read-from-string (default-params activity))
                                            :type activity
                                            :label label
                                            :distribution distribution-name
@@ -435,20 +453,6 @@
            (setf (resource-depth i) (1+ (resource-depth res)))
            (compute-depths i))))
 )
-
-#|
-(defmethod flatten-graph ((res resource))
-  (cond ((resource-dependents res)
-         (if (not (< (resource-depth res) (resource-depth (first (resource-dependents res)))))
-             (compute-depths res))
-         (let ((l (list res)))
-           (dolist (i (mapcar #'flatten-graph (resource-dependents res)) (sort l #'< :key #'resource-depth))
-             (dolist (j i)
-               (pushnew j l)))))
-        (t
-         (list res))
-))
-|#
 
 (defmethod flatten-graph ((res resource))
   (if (not (< (resource-depth res) (resource-depth (first (resource-dependents res)))))
@@ -587,7 +591,28 @@
           (if analog (merge-trials child mapping))))
 )
 
+(defmethod merge-trials ((self start-resource) (mapping hash-table))
+  (if (numberp (resource-duration self))
+      (setf (resource-duration self) (list (resource-duration self))))
+  (if (numberp (first (resource-parameters self)))
+      (setf (first (resource-parameters self) ) (list (first (resource-parameters self)))))
+  (let ((analog (gethash self mapping)))
+    (setf (start-resource-trial-duration self)
+          (append (start-resource-trial-duration analog)
+                  (start-resource-trial-duration self)))
+    (push (resource-duration analog) (resource-duration self))
+    (push (resource-duration analog) (first (resource-parameters self))))
+  (remhash self mapping)
+  (loop for child in (resource-dependents self) do
+        (let ((analog (gethash child mapping)))
+          (if analog (merge-trials child mapping))))
+)
+
 (defmethod attempt-merge-trials ((trials list) (cur-trial resource))
+  (format t "Attempting to find existing trials...~%")
+  (finish-output *standard-output*)
+  (format t "Size of graph: ~A~%" (size-of-graph cur-trial))
+  (finish-output *standard-output*)
   (if (null trials)
       (list cur-trial)
     (cond (*merge-trials*
@@ -597,6 +622,8 @@
                    (progn
                      ;(let ((*interactive* t) *block*) (say "  Checking for graph isomorphism"))
                      ;(if (= (size-of-graph entry) (size-of-graph cur-trial))
+                     (format t "Size of target graph: ~A~%" (size-of-graph entry))
+                     (finish-output *standard-output*)
                      (let ((map (are-isomorphic-2? entry cur-trial)))
                        (cond (map
                               (let ((*interactive* t) *block*) (say "    Merging trials"))
@@ -1018,14 +1045,16 @@
                (loop for constraint in (flatten (as-list (processor-constraints (get-processor)))) do
                      (if (eq (resource-constraint-method constraint) 'serial)
                          (mapc #'serialize-queue (resource-constraint-queues constraint))))
-               (setf cur-trial (make-instance 'resource
+               (setf cur-trial (make-instance 'start-resource
                                               :duration 0
                                               :start-time (in-trial? (get-processor))
                                               :end-time (in-trial? (get-processor))
                                               :type (get-activity-by-typename "Cognitive Operator")
                                               :label "Start Trial"
                                               :distribution "Constant"
-                                              :parameters '(0)))
+                                              :parameters '(0)
+                                              :trial-duration (list (- (gethash :end args)
+                                                                       (in-trial? (get-processor))))))
                (setf (resource-queue-number cur-trial)
                      (position (first (gethash (get-activity-by-typename "Cognitive Operator")
                                                (processor-queues (get-processor))))

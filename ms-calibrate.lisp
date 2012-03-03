@@ -2,7 +2,7 @@
 (defparameter *save-dir* "~/sanlab/Models/IBM/")
 (defparameter *limit-data-ingest* nil)
 (defparameter *ignore-subjects* '(703))
-(defparameter *segment* t) ; change to nil for full aggregate models
+(defparameter *segment* nil) ; change to nil for full aggregate models
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -205,7 +205,8 @@
   (let ((parser (make-instance 'calib-parser
                                :event-stream (open mouse)
                                :fixation-stream (open eye))))
-    (let ((result (if ht (run-protocol-analysis parser :merge-trials merge :trials ht) (run-protocol-analysis parser :merge-trials merge))))
+    (let ((result (if ht (run-protocol-analysis parser :merge-trials merge :trials ht)
+                    (run-protocol-analysis parser :merge-trials merge))))
       (close (parser-event-stream parser))
       (close (parser-fixation-stream parser))
       (values result parser))))
@@ -231,6 +232,12 @@
                     (i 1 (1+ i)))
                    ((null l) nil)
                  (setf (app-property 'current-controller) (make-instance 'controller))
+                 (with-open-file (out (format nil "~A~A/~A-~A-~A-~A-durations.txt"
+                                              *save-dir* subject subject
+                                              k (num-merged-trials (car l)) i)
+                                      :if-exists :supersede :direction :output)
+                   (dolist (dur (start-resource-trial-duration (car l)))
+                     (format out "~A~%" dur)))
                  (let ((model (resource-graph-to-sanlab-model (car l)))
                        (p (format nil "~A~A/~A-~A-~A-~A.san/"
                                   *save-dir* subject subject
@@ -294,3 +301,6 @@
 
 (defparameter *interrupts*
   '(("System Resource" "Perceptual Operator")))
+
+(defparameter *utilizes*
+  '(("Prepped Mouse Click" "Perceptual Operator (Visual)")))
