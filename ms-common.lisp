@@ -76,3 +76,9 @@ copy is returned by default."
                (setf (gethash k copy) (funcall key v)))
              table)
     copy))
+
+(defun max-func (items)
+  (let ((max (first items)))
+    (dolist (x (cdr items) max)
+      (if (< max x) (setf max x))))
+)

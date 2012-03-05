@@ -1,4 +1,4 @@
-'(defconstant *stack-warn-limit* (/ (megabytes 64) 4))
+(defconstant *stack-warn-limit* (/ (megabytes 64) 4))
 (defparameter *warned-about-stack* nil)
 (defparameter *display-type* (get-activity-by-typename "Display Event"))
 (defparameter *interactive* nil)
@@ -457,6 +457,20 @@
 (defmethod flatten-graph ((res resource))
   (if (not (< (resource-depth res) (resource-depth (first (resource-dependents res)))))
       (compute-depths res))
+  (let (res (l (list res)))
+    (do ((x (car l) (car l)))
+        ((null l) (sort res #'< :key #'resource-depth))
+      (setf l (cdr l))
+      (cond ((not (member x res))
+             (push x res)
+             (dolist (child (resource-dependents x))
+               (pushnew child l))))))
+)
+
+#|
+(defmethod flatten-graph ((res resource))
+  (if (not (< (resource-depth res) (resource-depth (first (resource-dependents res)))))
+      (compute-depths res))
   (let ((l (list res)))
     (dolist (x l)
       (dolist (child (resource-dependents x))
@@ -464,6 +478,7 @@
             (setf (cdr (last l)) (cons child nil)))))
     (sort (remove-duplicates l) #'< :key #'resource-depth)
     ))
+|#
 
 (defmethod end-node ((graph resource))
   (if (resource-dependents graph)
@@ -609,10 +624,10 @@
 )
 
 (defmethod attempt-merge-trials ((trials list) (cur-trial resource))
-  (format t "Attempting to find existing trials...~%")
-  (finish-output *standard-output*)
-  (format t "Size of graph: ~A~%" (size-of-graph cur-trial))
-  (finish-output *standard-output*)
+  ;(format t "Attempting to find existing trials...~%")
+  ;(finish-output *standard-output*)
+  ;(format t "Size of graph: ~A~%" (size-of-graph cur-trial))
+  ;(finish-output *standard-output*)
   (if (null trials)
       (list cur-trial)
     (cond (*merge-trials*
@@ -621,14 +636,14 @@
              (loop for entry in trials do
                    (progn
                      ;(let ((*interactive* t) *block*) (say "  Checking for graph isomorphism"))
-                     ;(if (= (size-of-graph entry) (size-of-graph cur-trial))
-                     (format t "Size of target graph: ~A~%" (size-of-graph entry))
-                     (finish-output *standard-output*)
+                     (if (= (size-of-graph entry) (size-of-graph cur-trial))
+                     ;(format t "Size of target graph: ~A~%" (size-of-graph entry))
+                     ;(finish-output *standard-output*)
                      (let ((map (are-isomorphic-2? entry cur-trial)))
                        (cond (map
                               (let ((*interactive* t) *block*) (say "    Merging trials"))
                               (merge-trials entry map)
-                              (setf found t) (return))))))
+                              (setf found t) (return)))))))
              (if (not found) (push cur-trial trials) 
                (progn
                  (let ((*interactive* t) *block*) (say "      Found a matching trial!"))
@@ -884,12 +899,12 @@
                 (resource-predecessors res)))
   (if (edges-in (resource-node res))
       (setf (stored-x (resource-node res))
-            (+ 200 (apply #'max (mapcar #'stored-x (edges-in (resource-node res)))))))
+            (+ 200 (max-func (mapcar #'stored-x (edges-in (resource-node res)))))))
   (cond ((= (resource-depth res) 0)
-         (setf (width model) (+ 200 (apply #'max (- (width model) 200)
-                                           (mapcar #'stored-x (activities model)))))
-         (setf (height model) (+ 150 (apply #'max (- (height model) 150)
-                                            (mapcar #'stored-y (activities model)))))
+         (setf (width model) (+ 200 (max-func (cons (- (width model) 200)
+                                              (mapcar #'stored-x (activities model))))))
+         (setf (height model) (+ 150 (max-func (cons (- (height model) 150)
+                                               (mapcar #'stored-y (activities model))))))
          (Setf (title model) "Model generated from human data")
          ))
   model

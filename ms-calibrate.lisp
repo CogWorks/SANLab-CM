@@ -1,7 +1,7 @@
 (defparameter *debug-calibrate* nil)
 (defparameter *save-dir* "~/sanlab/Models/IBM/")
 (defparameter *limit-data-ingest* nil)
-(defparameter *ignore-subjects* '(703))
+(defparameter *ignore-subjects* '(703 802 806 810 811 812 817))
 (defparameter *segment* nil) ; change to nil for full aggregate models
 
 (defconstant *w-prime-mapping*
@@ -222,8 +222,8 @@
       (write-model-to-bundle p model))))
 
 (defun get-subject-files (subj)
-  (values (format nil "~~/Documents/Younger/P~A-Mouse-Data.txt" subj)
-          (format nil "~~/Documents/Younger/P~A-Fixation-Data.tsv" subj)))
+  (values (format nil "~~/Documents/IBM/P~A-Mouse-Data.txt" subj)
+          (format nil "~~/Documents/IBM/P~A-Fixation-Data.tsv" subj)))
 
 (defmethod save-models ((ht hash-table) (subject string))
   (ensure-directories-exist (format nil "~A~A/" *save-dir* subject))
@@ -258,7 +258,7 @@
                   (save-models (run-calibrate mouse eye) (format nil "P~A" i))
                   (run-calibrate mouse eye ht)))
             subjects)
-    (save-models ht "AGG")))
+    (save-models ht "AGG-YNG")))
 
 (defun run-one-subject (&optional (s 701))
   (configure-default-processor)
