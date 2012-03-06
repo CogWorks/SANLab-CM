@@ -457,7 +457,7 @@ http://www.cogsci.rpi.edu/cogworks/
   (if (null distribution)
       (setf distribution (get-distribution act)))
   (if (null params)
-      (setf params (get-dist-params act)))
+      (setf params (get-default-params act)))
   (let ((node (make-instance 'graph-node :activity-type act :ir-type ir-type :ir-task ir-task :ir-append ir-append :stored-x x :stored-y y :label label :color color :distribution (get-distribution-by-typename distribution) :parameters params)))
     (push-activity node model)
     (fire-event-listeners (controller model) 'new-activity (list node))

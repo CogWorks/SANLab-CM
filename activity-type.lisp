@@ -64,9 +64,9 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
     (fire-event-listeners current-controller 'activity-type-changed (list type 'distribution val))))
 
 ; Fire event listeners when the default parameters change
-(defmethod (setf dist-params) :after (val (type activity-type))
+(defmethod (setf default-params) :after (val (type activity-type))
   (let ((current-controller (app-property 'current-controller)))
-    (fire-event-listeners current-controller 'activity-type-changed (list type 'dist-params val))))
+    (fire-event-listeners current-controller 'activity-type-changed (list type 'default-params val))))
 
 ; Fire event listeners when the activity color changes
 (defmethod (setf color) :after (val (type activity-type))
@@ -153,19 +153,19 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
     (distribution at)))
 
 ; Gets the default activity parameters
-(defmethod get-dist-params ((at activity-type))
-  (if (equalp :same-as-parent (dist-params at))
-      (get-dist-params (get-activity-by-symname (parent at)))
-    (let ((params (copy-list (dist-params at))))
+(defmethod get-default-params ((at activity-type))
+  (if (equalp :same-as-parent (default-params at))
+      (get-default-params (get-activity-by-symname (parent at)))
+    (let ((params (copy-list (default-params at))))
       (do ((i 0 (1+ i)))
           ((= i (length params)) params)
-        (if (equal (nth i params) :same-as-parent) (setf (nth i params) (get-dist-param at i)))))))
+        (if (equal (nth i params) :same-as-parent) (setf (nth i params) (get-default-param at i)))))))
 
 ; Gets a specific default parameter
-(defmethod get-dist-param ((at activity-type) num)
-  (let ((param (nth num (dist-params at))))
+(defmethod get-default-param ((at activity-type) num)
+  (let ((param (nth num (default-params at))))
     (cond ((equalp :same-as-parent param)
-           (get-dist-param (get-activity-by-symname (parent at)) num))
+           (get-default-param (get-activity-by-symname (parent at)) num))
           ((listp param)
            (format nil "random~S" param))
           (t
