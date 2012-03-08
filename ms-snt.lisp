@@ -1,5 +1,6 @@
 (defparameter *debug-snt* t)
-(defparameter *save-dir* "~/sanlab/Models/SNT/")
+(defparameter *source-dir* "/Volumes/Time Machine/SNT")
+(defparameter *save-dir* "~/sanlab/Models/SNT")
 
 (defconstant *data-files* '(( 8113 "mnt-01_Condition 1_2008-11-04_1614_8113.xls" "NavBack-E1-Merged.data.xls" )
                             ( 5516 "mnt-01_Condition 1_2008-11-15_1130_660435516.xls" "NavBack-E1-Merged.data.xls" )
@@ -32,6 +33,11 @@
   `(if ,test
        (format t ,@rest)))
 
+(defun read-tab-line (stream)
+  (let* ((line (read-line stream nil ""))
+         (parts (mapcar #'read-from-string (explode-tab line))))
+    parts))
+
 (defclass snt-parser (parser)
   ((stream :initarg :stream :accessor parser-stream)
    (fixations :initarg :fixations :accessor parser-fixations)
@@ -49,6 +55,17 @@
    (last-display :initform nil :accessor parser-last-display)
    (last-trial-valid :initform nil :accessor parser-last-trial-valid)
    ))
+
+(defmethod read-stream-line ((parser snt-parser))
+  (let ((line (read-tab-line (parser-stream parser))))
+    (if line
+        (setf (first line) (read-from-string (first line))
+              (second line) (read-from-string (substitute #\- #\Space (second line)))
+              (fourth line) (read-from-string (fourth line))
+              (fifth line) (read-from-string (fifth line))
+              ; All remaining items dependent on columns 4 & 5
+              ))
+    line))
 
 (defmethod initialize-parser ((parser snt-parser))
   (setf *fill-gaps* '("Cognitive Operator"))
@@ -289,136 +306,49 @@
                       :label "Direction - "))
 ))
 
-(defun read-tab-line (stream)
-  (let* ((line (read-line stream nil ""))
-         (parts (mapcar #'read-from-string (explode-tab line))))
-    parts))
-
-(defmethod read-stream-line ((parser snt-parser))
-  (let ((line (read-tab-line (parser-stream parser))))
-    (if line
-        (setf (first line) (read-from-string (first line))
-              (second line) (read-from-string (substitute #\- #\Space (second line)))
-              (fourth line) (read-from-string (fourth line))
-              (fifth line) (read-from-string (fifth line))
-              ; All remaining items dependent on columns 4 & 5
-              ))
-    line))
-
-(defun run-snt (id log eye)
+(defun run-snt (id log eye &optional ht (merge t))
   (reset-processor (get-processor))
   (let ((parser (make-instance 'snt-parser
-                               :stream (open (format nil "/Users/ewpatton/Research/SANLab/v3.0/SNT/Data/~A" log))
-                               :fixations (open (format nil "/Users/ewpatton/Research/SANLab/v3.0/SNT/Eyetrack Processed Files/~A" eye))
+                               :stream (open (format nil "~A/Data/~A" *source-dir* log))
+                               :fixations (open (format nil "~A/Eyetrack Processed Files/~A" *source-dir* eye))
                                :subject id)))
-    (let ((result (run-protocol-analysis parser)))
+    (let ((result (if ht (run-protocol-analysis parser :merge-trials merge :trials ht)
+                    (run-protocol-analysis parser :merge-trials merge))))
       (close (parser-stream parser))
       (close (parser-fixations parser))
-      (values result parser))
-)
-)
+      (values result parser))))
 
-(defmethod save-snt-models ((p snt-parser) (l list))
-  (do ((l l (cdr l))
-       (i 1 (1+ i)))
-      ((null l) nil)
-    (let ((fn (format nil "~A~A_~A_model_~A.san/" *save-dir* (num-merged-trials (car l)) (parser-subject p) i))
-          (model (resource-graph-to-sanlab-model (car l))))
-      (make-sanlab-bundle fn)
-      (write-model-to-bundle fn model))))
+(defun process-all-files ()
+  (configure-default-processor)
+  (let ((ht (make-hash-table)))
+    (mapcar #'(lambda (i)
+                (destructuring-bind (id log eye) i
+                  (format t "Processing ~A~%" id)
+                  (save-models (run-snt id log eye) (format nil "~A" id))
+;                  (run-snt id log eye ht)
+))
+            *data-files*)
+;    (save-models ht "AGG")
+))
 
-(defun test-snt-processor ()
-  (let ((parser (make-instance 'snt-parser
-                               :stream (open "/Users/ewpatton/Research/SANLab/v3.0/SNT/Data/mnt-01_Condition 1_2008-11-04_1614_8113.xls")
-                               :fixations (open "/Users/ewpatton/Research/SANLab/v3.0/SNT/Eyetrack Processed Files/NavBack-E1-Merged.data.xls")
-                               :subject 8113))
-        (turn-lookup (make-hash-table))
-        (jitter-lookup (make-hash-table))
-        (line nil)
-        (cbtime 100)
-        (fixation nil))
+(defmethod save-models ((ht hash-table) (subject string))
+  (ensure-directories-exist (format nil "~A/~A/" *save-dir* subject))
+  (maphash #'(lambda (k v)
+               (do ((l v (cdr l))
+                    (i 1 (1+ i)))
+                   ((null l) nil)
+                 (setf (app-property 'current-controller) (make-instance 'controller))
+                 (with-open-file (out (format nil "~A/~A/~A-~A-~A-~A-durations.txt"
+                                              *save-dir* subject subject
+                                              k (num-merged-trials (car l)) i)
+                                      :if-exists :supersede :direction :output)
+                   (dolist (dur (start-resource-trial-duration (car l)))
+                     (format out "~A~%" dur)))
+                 (let ((model (resource-graph-to-sanlab-model (car l)))
+                       (p (format nil "~A/~A/~A-~A-~A-~A.san/"
+                                  *save-dir* subject subject
+                                  k (num-merged-trials (car l)) i)))
+                   (make-sanlab-bundle p)
+                   (write-model-to-bundle p model))))
+           ht))
 
-    (setf (gethash 1 turn-lookup) 'left
-          (gethash 2 turn-lookup) 'right
-          (gethash 3 turn-lookup) 'forward
-          (gethash 1 jitter-lookup) 'left
-          (gethash 2 jitter-lookup) 'right)
-
-    ; Seek to first fixation
-    (setf fixation
-          (do ((x (read-tab-line (parser-fixations parser))
-                  (read-tab-line (parser-fixations parser))))
-              ((equal (first x) (parser-subject parser)) x)
-            (setf fixation x)))
-    (print-if *debug-snt* "~A~%" fixation)
-
-    ; Seek to first trial
-    (setf line
-          (do ((x (read-stream-line parser)
-                  (read-stream-line parser)))
-              ((and (equal (first x) (parser-subject parser))
-                    (equal (fifth x) 'snt-display)) x)
-            (setf line x)))
-    (print-if *debug-snt* "~A~%" line)
-
-    (setf (parser-sys-state-turns parser) (mapcar #'read-from-string (last line 3)))
-    (print-if *debug-snt* "First three turns: ~A~%" (parser-sys-state-turns parser))
-
-    (do ()
-        ((equal nil line) line)
-      (cond (; Sync the two files if the data file trails the fixation file
-             (or (null fixation) (< (third line) (third fixation)))
-             (let ((end (last line 3)))
-               (cond ((and (equal (fifth line) 'snt-display)
-                           (not (member nil (mapcar #'(lambda (x)
-                                                        (member x '("LEFT" "FORWARD" "RIGHT")
-                                                                :test 'equal))
-                                                    end))))
-                      (let ((turns (mapcar #'read-from-string end)))
-                        (cond ((parser-sys-state-turns parser)
-                               (print-if *debug-snt* "New turn: ~A~%" (third turns))
-                               )
-                              (t
-                               (print-if *debug-snt* "Starting turn queue: ~A~%" turns)))
-                        (setf (parser-sys-state-turns parser) turns))
-                      )
-                     ((and (equal (fifth line) 'snt-action)
-                           (/= (second end) 0))
-                      (print-if *debug-snt* "Subject turned ~A~%" (gethash (second end) turn-lookup))
-                      )
-                     ((and (equal (fifth line) 'snt-action)
-                           (= (second end) 0))
-                      (print-if *debug-snt* "Subject strafed ~A~%" (gethash (third end) turn-lookup))
-                      )
-                     ((and (equal (fifth line) 'snt-step)
-                           (< (ninth line) cbtime))
-                      (setf cbtime (ninth line)
-                            (parser-block parser) (seventh line)
-                            (parser-trial parser) (1+ (parser-trial parser)))
-                      (print-if *debug-snt* "Start block ~A, trial ~A~%" (parser-block parser) (parser-trial parser))
-                      )
-                     ((equal (fifth line) 'snt-step)
-                      (setf cbtime (ninth line))
-               ;(print-if *debug-snt* "cbtime = ~A~%" (ninth line))
-                      )
-                     )
-               (setf line (read-stream-line parser))
-               ))
-            (; Sync the two files if the fixation file trails the data file
-             fixation
-             (if (and (<= 100 (- (fourth fixation) (third fixation)))
-                      (> 2.0 (first (last fixation))))
-                 (print-if *debug-snt* "Subject fixated on ~A for ~A milliseconds~%" (first (last fixation 2)) (nth 13 fixation)))
-             (setf fixation (read-tab-line (parser-fixations parser)))
-             (do ()
-                 ((or (null fixation) (and (numberp (third fixation)) (numberp (fourth fixation)))) nil)
-               (setf fixation (read-tab-line (parser-fixations parser)))
-               (if (/= (first fixation) (parser-subject parser))
-                   (setf fixation nil))
-               )
-             )))
-
-    (close (parser-stream parser))
-    (close (parser-fixations parser))
-)
-)
