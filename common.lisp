@@ -428,7 +428,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
   (let ((sum 0.0))
     (dolist (item data-list)
       (incf sum (expt (- item mean) 2)))
-    (setf sum (/ sum (length data-list)))
+    (setf sum (/ sum (1- (length data-list))))
     (sqrt sum)))
 
 (defun nearest-grid-point (interface x y)
