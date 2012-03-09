@@ -2,31 +2,26 @@
 (defparameter *source-dir* "/Volumes/Time Machine/SNT")
 (defparameter *save-dir* "~/sanlab/Models/SNT")
 
-(defconstant *data-files* '(( 8113 "mnt-01_Condition 1_2008-11-04_1614_8113.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 5516 "mnt-01_Condition 1_2008-11-15_1130_660435516.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 3422 "mnt-01_Condition 1_2008-11-19_1533_3422.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 1379 "mnt-01_Condition 1_2008-11-20_1621_660551379.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 3838 "mnt-01_Condition 1_2008-12-04_1215_3838.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 3838 "mnt-01_Condition 1_2008-12-04_1229_3838.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 7045 "mnt-01_Condition 1_2008-12-04_1413_660517045.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 5073 "mnt-01_Condition 1_2008-12-04_1715_5073.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 9800 "mnt-01_Condition 1_2008-12-05_1210_9800.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 1976 "mnt-01_Condition 1_2009-02-06_1414_1976.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 1644 "mnt-01_Condition 2_2008-11-05_1538_1644.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 216 "mnt-01_Condition 2_2008-11-17_1612_0216.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 4361 "mnt-01_Condition 2_2008-11-21_1724_4361.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 5581 "mnt-01_Condition 2_2008-12-01_1219_5581.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 7136 "mnt-01_Condition 2_2008-12-01_1322_7136.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 7136 "mnt-01_Condition 2_2008-12-01_1332_7136.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 7136 "mnt-01_Condition 3_2008-11-20_1511_660567136.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 7318 "mnt-01_Condition 2_2008-12-01_1812_7318.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 3062 "mnt-01_Condition 2_2008-12-02_1310_3062.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 2021 "mnt-01_Condition 2_2008-12-02_1508_2021.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 8959 "mnt-01_Condition 2_2008-12-05_1315_8959.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 6233 "mnt-01_Condition 2_2009-02-18_1615_6233.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 2990 "mnt-01_Condition 2_2009-02-20_1402_2990.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 3020 "mnt-01_Condition 2_2009-02-27_1531_3020.xls" "NavBack-E1-Merged.data.xls" )
-                            ( 8111 "mnt-01_Condition 2_2009-03-17_1219_8111.xls" "NavBack-E1-Merged.data.xls" )
+(defconstant *data-files* '(( 8113 "mnt-01_Condition 1_2008-11-04_1614_8113.xls" "subj-8113.txt" )
+                            ( 5516 "mnt-01_Condition 1_2008-11-15_1130_660435516.xls" "subj-5516.txt" )
+                            ( 3422 "mnt-01_Condition 1_2008-11-19_1533_3422.xls" "subj-3422.txt" )
+                            ( 1379 "mnt-01_Condition 1_2008-11-20_1621_660551379.xls" "subj-1379.txt" )
+                            ( 7045 "mnt-01_Condition 1_2008-12-04_1413_660517045.xls" "subj-7045.txt" )
+                            ( 5073 "mnt-01_Condition 1_2008-12-04_1715_5073.xls" "subj-5073.txt" )
+                            ( 9800 "mnt-01_Condition 1_2008-12-05_1210_9800.xls" "subj-9800.txt" )
+                            ( 1976 "mnt-01_Condition 1_2009-02-06_1414_1976.xls" "subj-1976.txt" )
+                            ( 1644 "mnt-01_Condition 2_2008-11-05_1538_1644.xls" "subj-1644.txt" )
+                            ( 216 "mnt-01_Condition 2_2008-11-17_1612_0216.xls" "subj-216.txt" )
+                            ( 4361 "mnt-01_Condition 2_2008-11-21_1724_4361.xls" "subj-4361.txt" )
+                            ( 5581 "mnt-01_Condition 2_2008-12-01_1219_5581.xls" "subj-5581.txt" )
+                            ( 7318 "mnt-01_Condition 2_2008-12-01_1812_7318.xls" "subj-7318.txt" )
+                            ( 3062 "mnt-01_Condition 2_2008-12-02_1310_3062.xls" "subj-3062.txt" )
+                            ( 2021 "mnt-01_Condition 2_2008-12-02_1508_2021.xls" "subj-2021.txt" )
+                            ( 8959 "mnt-01_Condition 2_2008-12-05_1315_8959.xls" "subj-8959.txt" )
+                            ( 6233 "mnt-01_Condition 2_2009-02-18_1615_6233.xls" "subj-6233.txt" )
+                            ( 2990 "mnt-01_Condition 2_2009-02-20_1402_2990.xls" "subj-2990.txt" )
+                            ( 3020 "mnt-01_Condition 2_2009-02-27_1531_3020.xls" "subj-3020.txt" )
+                            ( 8111 "mnt-01_Condition 2_2009-03-17_1219_8111.xls" "subj-8111.txt" )
 ))
 
 (defmacro print-if (test &rest rest)
@@ -57,15 +52,16 @@
    ))
 
 (defmethod read-stream-line ((parser snt-parser))
-  (let ((line (read-tab-line (parser-stream parser))))
-    (if line
-        (setf (first line) (read-from-string (first line))
-              (second line) (read-from-string (substitute #\- #\Space (second line)))
-              (fourth line) (read-from-string (fourth line))
-              (fifth line) (read-from-string (fifth line))
+  (ignore-errors
+    (let ((line (read-tab-line (parser-stream parser))))
+      (if line
+          (setf (first line) (read-from-string (first line))
+                (second line) (read-from-string (substitute #\- #\Space (second line)))
+                (fourth line) (read-from-string (fourth line))
+                (fifth line) (read-from-string (fifth line))
               ; All remaining items dependent on columns 4 & 5
-              ))
-    line))
+                ))
+      line)))
 
 (defmethod initialize-parser ((parser snt-parser))
   (setf *fill-gaps* '("Cognitive Operator"))
@@ -128,16 +124,26 @@
                          (numberp (first (last event))))
                     (setf args (make-hash-table))
                     (setf (gethash :end args) (third event))
-                    ;(setf (gethash 'valid-trial args) (parser-last-trial-valid parser))
-                    ;(format t "Last trial was valid? ~A~%" (parser-last-trial-valid parser))
-                    ;(format t "Other field? ~A~%" (first (last event 2)))
                     (setf (gethash 'valid-trial args) (= (first (last event 2)) 100))
+                    (setf (gethash 'condition args) (read-from-string (format nil "COND~A" (subseq (symbol-name (second event)) 10))))
                     (format t "Last trial was valid? ~A~%" (gethash 'valid-trial args))
 
                     (return (values 'end-trial args)))
                    (; Process jitter correct
                     (and (equal (fifth event) 'snt-action)
                          (/= (first (last event)) 0))
+                    (setf args (make-hash-table))
+                    (let ((cmd (case (first (last event))
+                                 (0 'CONTINUE) ; this shouldn't happen
+                                 (1 'SNT-CORRECT-LEFT)
+                                 (2 'SNT-CORRECT-RIGHT)))
+                          (start (make-hash-table)) (end (make-hash-table)))
+                      (setf (gethash 3 start) (- (third event) 100.0))
+                      (setf (gethash 3 end) (third event))
+                      (setf (gethash :start args) start)
+                      (setf (gethash :end args) end)
+                      (setf (parser-last-event parser) (read-stream-line parser))
+                      (return (values cmd args)))
                     )
                    (; Process turn
                     (and (equal (fifth event) 'snt-action)
@@ -239,6 +245,8 @@
                       (setf (gethash 3 end) (fourth fixation))
                       (setf (gethash :start args) start)
                       (setf (gethash :end args) end)
+                      (if (< (first (last fixation)) 2.0)
+                          (setf (gethash :label args) (format nil "~A" (first (last fixation 2)))))
                     )))
              (setf (parser-second-last-fixation parser) fixation)
              (setf fixation
@@ -275,7 +283,7 @@
                     :distribution "Constant"
                     ))
     (SNT-LEFT . (:type :routine
-                 :routine "Key Press (Left Hand)"
+                 :routine "Key Press (Right Hand)"
                  :event-id (2 3 4)
                  :distribution "Constant" 
                  :label "Turn Left"
@@ -288,12 +296,12 @@
                   ))
     (SNT-CORRECT-LEFT . (:type :routine
                          :routine "Key Press (Left Hand)"
-                         :event-id (2 3 4)
+                         :event-id (3)
                          :distribution "Constant"
                          :label "Jitter-correct Left"))
     (SNT-CORRECT-RIGHT . (:type :routine
-                          :routine "Key Press (Right Hand)"
-                          :event-id (2 3 4)
+                          :routine "Key Press (Left Hand)"
+                          :event-id (3)
                           :distribution "Constant"
                           :label "Jitter-correct Right"))
     (SNT-DISPLAY . (:type :activity
@@ -305,6 +313,10 @@
                       :distribution "Constant"
                       :label "Direction - "))
 ))
+
+(defparameter *utilizes*
+  '(("Key Press (Left Hand)" "Perceptual Operator")
+    ("Key Press (Right Hand)" "Perceptual Operator")))
 
 (defun run-snt (id log eye &optional ht (merge t))
   (reset-processor (get-processor))
@@ -320,16 +332,21 @@
 
 (defun process-all-files ()
   (configure-default-processor)
+  (mapc #'(lambda (i)
+            (destructuring-bind (id log eye) i
+              (format t "Processing ~A~%" id)
+              (save-models (run-snt id log eye) (format nil "~A" id))))
+        *data-files*))
+
+(defun process-aggregate ()
+  (configure-default-processor)
   (let ((ht (make-hash-table)))
-    (mapcar #'(lambda (i)
-                (destructuring-bind (id log eye) i
-                  (format t "Processing ~A~%" id)
-                  (save-models (run-snt id log eye) (format nil "~A" id))
-;                  (run-snt id log eye ht)
-))
-            *data-files*)
-;    (save-models ht "AGG")
-))
+    (mapc #'(lambda (i)
+              (destructuring-bind (id log eye) i
+                (format t "Processing ~A~%" id)
+                (run-snt id log eye ht)))
+          *data-files*)
+    (save-models ht "AGG")))
 
 (defmethod save-models ((ht hash-table) (subject string))
   (ensure-directories-exist (format nil "~A/~A/" *save-dir* subject))
@@ -338,15 +355,16 @@
                     (i 1 (1+ i)))
                    ((null l) nil)
                  (setf (app-property 'current-controller) (make-instance 'controller))
-                 (with-open-file (out (format nil "~A/~A/~A-~A-~A-~A-durations.txt"
-                                              *save-dir* subject subject
+                 (ensure-directories-exist (format nil "~A/~A/~A/" *save-dir* subject k))
+                 (with-open-file (out (format nil "~A/~A/~A/~A-~A-~A-~A-durations.txt"
+                                              *save-dir* subject k subject
                                               k (num-merged-trials (car l)) i)
                                       :if-exists :supersede :direction :output)
                    (dolist (dur (start-resource-trial-duration (car l)))
                      (format out "~A~%" dur)))
                  (let ((model (resource-graph-to-sanlab-model (car l)))
-                       (p (format nil "~A/~A/~A-~A-~A-~A.san/"
-                                  *save-dir* subject subject
+                       (p (format nil "~A/~A/~A/~A-~A-~A-~A.san/"
+                                  *save-dir* subject k subject
                                   k (num-merged-trials (car l)) i)))
                    (make-sanlab-bundle p)
                    (write-model-to-bundle p model))))
