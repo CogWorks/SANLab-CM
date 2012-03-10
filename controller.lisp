@@ -138,15 +138,15 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
      )))
 
 
-(defmethod run-model-with-special-processor ((controller controller) (trials number) (callback function) (seed random-state) (processor symbol))
+(defmethod run-model-with-special-processor ((controller controller) (trials number) (callback function) (seed random-state) (processor symbol) &key (wait nil) (show t))
   (setq *random-state* seed)
-  (let ((np (make-instance processor :total-trials trials :callback callback :model (model controller))))
-    (execute-processor np))
+  (let ((np (make-instance processor :total-trials trials :callback callback :model (model controller) :show-results show)))
+    (execute-processor np :wait wait))
   (clear-redo-history controller)
 )
 
-(defmethod run-model ((controller controller) (trials number) (callback function) &key (seed *random-state*))
-  (run-model-with-special-processor controller trials callback seed 'network-processor))
+(defmethod run-model ((controller controller) (trials number) (callback function) &key (seed *random-state*) (wait nil) (show t))
+  (run-model-with-special-processor controller trials callback seed 'network-processor :wait wait :show show))
 
 (defmethod generate-sample-trace ((controller controller) filepath)
   (generate-actr-style-trace (model controller) filepath)
