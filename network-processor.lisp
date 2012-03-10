@@ -22,6 +22,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 (defclass network-processor ()
   ((num-trials :initform 0 :initarg :total-trials :accessor total-trials)
    (cur-trial :initform 0 :accessor cur-trial)
+   (show-results :initform t :initarg :show-results :reader show-results? :writer (setf show-results))
    (model :initform nil :initarg :model :accessor model)
    (callback :initform nil :initarg :callback :accessor callback)
    (update-process :initform nil :accessor update-process)
@@ -38,10 +39,11 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
    (cpindex :initform nil :initarg :cpindex :accessor cpindex)
    (percent :initform nil :initarg :percent :accessor percent)))
 
-(defmethod execute-processor ((np network-processor))
-  (setf (update-process np) (mp:process-run-function "network-processor Update Process" '() #'update-function np))
-  (setf (calc-process np) (mp:process-run-function "network-processor Calculation Process" '() #'calculation-process-wrapper np)))
-;  (calculation-process np))
+(defmethod execute-processor ((np network-processor) &key (wait nil))
+  (cond (wait (calculation-process np))
+        (t
+         (setf (update-process np) (mp:process-run-function "network-processor Update Process" '() #'update-function np))
+         (setf (calc-process np) (mp:process-run-function "network-processor Calculation Process" '() #'calculation-process-wrapper np)))))
 
 (defmethod stop-processor ((np network-processor))
   (if (equal (mp:get-current-process) (calc-process np))
@@ -340,15 +342,16 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
         (write-statistics-to-bundle (filename model) path-records (run-number model))
         (write-random-state-to-bundle (filename model) starting-random-state (run-number model))
         (if callback (apply callback (list 'results trial-results path-records ct-tracker starting-random-state)))
-        (display-histogram-window (view (controller model))
-                                  max-time
-                                  trials
-                                  (list-min simulation-results)
-                                  (list-max simulation-results)
-                                  simulation-results
-                                  path-records
-                                  (- (get-internal-real-time) start-time)
-                                  file))
+        (if (show-results? np)
+            (display-histogram-window (view (controller model))
+                                      max-time
+                                      trials
+                                      (list-min simulation-results)
+                                      (list-max simulation-results)
+                                      simulation-results
+                                      path-records
+                                      (- (get-internal-real-time) start-time)
+                                      file)))
       t
 )))
 
