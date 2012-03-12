@@ -65,7 +65,7 @@
                                            #\tab m1
                                            #\tab (stdev times m1) 
                                            #\tab m2
-                                           #\tab (abs (* 100.0 (/ (- m1 m2) m1)))
+                                           #\tab (abs (* 100.0 (/ (- m1 m2) m2)))
                                            #\tab tv #\tab df
                                            #\tab p)))))))
                         :wait t :show nil))))))

@@ -22,6 +22,23 @@
                             ( 2990 "mnt-01_Condition 2_2009-02-20_1402_2990.xls" "subj-2990.txt" )
                             ( 3020 "mnt-01_Condition 2_2009-02-27_1531_3020.xls" "subj-3020.txt" )
                             ( 8111 "mnt-01_Condition 2_2009-03-17_1219_8111.xls" "subj-8111.txt" )
+;                            ( 8228 "mnt-01_Condition 3_2008-11-04_1518_660478228.xls" "subj-8228.txt" )
+;                            ( 5160 "mnt-01_Condition 3_2008-11-14_1319_5160.xls" "subj-5160.txt" )
+;                            ( 6770 "mnt-01_Condition 3_2008-11-17_1707_6770.xls" "subj-6770.txt" )
+;                            ( 5272 "mnt-01_Condition 3_2008-11-19_1420_5272.xls" "subj-5272.txt" )
+;                            ( 7136 "mnt-01_Condition 3_2008-11-20_1511_660567136.xls" "subj-7136.txt" )
+;                            ( 9415 "mnt-01_Condition 3_2008-11-20_1737_9415.xls" "subj-9415.txt" )
+;                            ( 8570 "mnt-01_Condition 3_2008-11-21_1622_660578570.xls" "subj-8570.txt" )
+;                            ( 3577 "mnt-01_Condition 3_2008-12-01_1711_3577.xls" "subj-3577.txt" )
+;                            ( 2464 "mnt-01_Condition 3_2008-12-02_1013_2464.xls" "subj-2464.txt" )
+;                            ( 9394 "mnt-01_Condition 3_2008-12-02_1408_660659394.xls" "subj-9394.txt" )
+;                            ( 4719 "mnt-01_Condition 3_2008-12-03_1618_4719.xls" "subj-4719.txt" )
+;                            ( 5529 "mnt-01_Condition 3_2008-12-04_1013_5529.xls" "subj-5529.txt" )
+;                            ( 5141 "mnt-01_Condition 3_2008-12-04_1323_5141.xls" "subj-5141.txt" )
+;                            ( 8246 "mnt-01_Condition 3_2008-12-05_1607_8246.xls" "subj-8246.txt" )
+;                            ( 8393 "mnt-01_Condition 3_2009-02-06_1310_8393.xls" "subj-8393.txt" )
+;                            ( 5483 "mnt-01_Condition 3_2009-02-06_1517_5483.xls" "subj-5483.txt" )
+;                            ( 4846 "mnt-01_Condition 3_2009-02-20_1504_4846.xls" "subj-4846.txt" )
 ))
 
 (defmacro print-if (test &rest rest)
@@ -64,7 +81,8 @@
       line)))
 
 (defmethod initialize-parser ((parser snt-parser))
-  (setf *fill-gaps* '("Cognitive Operator"))
+  ;(setf *fill-gaps* '("Cognitive Operator"))
+  (setf *fill-gaps* nil)
   (let (line fixation)
 
     (setf (gethash 1 (parser-turn-lookup parser)) 'left
@@ -201,7 +219,8 @@
                    (; Process display update
                     (equal (fifth event) 'snt-step)
                     (setf args (make-hash-table))
-                    (setf (gethash :start args) (- (third event) 200.0))
+                    ;(setf (gethash :start args) (- (third event) 200.0))
+                    (setf (gethash :start args) (third event))
                     (setf (gethash :end args) (third event))
 
                     (setf (parser-last-event parser) (read-stream-line parser))
@@ -211,13 +230,26 @@
                    (; Process display of direction
                     (and (equal (fifth event) 'snt-display)
                          (stringp (first (last event))))
-                    (setf args (make-hash-table))
-                    (setf (gethash :start args) (third event))
-                    (setf (gethash :end args) (third event))
+                    (case (second event)
+                      ('condition-2
+                       (setf args (make-hash-table))
+                       (let ((start (make-hash-table)) (end (make-hash-table)))
+                         (setf (gethash 2 start) (third event))
+                         (setf (gethash 2 end) (+ (third event) 100.0))
 
-                    (setf (parser-last-event parser) (read-stream-line parser))
+                         (setf (gethash :start args) start)
+                         (setf (gethash :end args) end)
 
-                    (return (values 'snt-direction args)))
+                         (setf (parser-last-event parser) (read-stream-line parser))
+                         (return (values 'snt-direction-aud args))))
+                      (t
+                       (setf args (make-hash-table))
+                       (setf (gethash :start args) (third event))
+                       (setf (gethash :end args) (third event))
+                       
+                       (setf (parser-last-event parser) (read-stream-line parser))
+                       
+                       (return (values 'snt-direction-vis args)))))
                    (; Debugging
                     (equal (fifth event) 'snt-display)
                     (let ((*interactive* t) *block*) (say "** HELP: ~S" event)))
@@ -308,10 +340,15 @@
                     :activity "System Resource"
                     :distribution "Constant"
                     :label "Display Update"))
-    (SNT-DIRECTION . (:type :activity
-                      :activity "System Resource"
-                      :distribution "Constant"
-                      :label "Direction - "))
+    (SNT-DIRECTION-VIS . (:type :activity
+                          :activity "System Resource"
+                          :distribution "Constant"
+                          :label "Direction - "))
+    (SNT-DIRECTION-AUD . (:type :routine
+                          :routine "Hear Word"
+                          :distribution "Constant"
+                          :event-id (2)
+                          :label "Direction - "))
 ))
 
 (defparameter *utilizes*
