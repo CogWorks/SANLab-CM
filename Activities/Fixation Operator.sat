@@ -17,33 +17,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 |#
 
-(defroutine
-"Mouse Move"
-#(:RGB 0.0 0.3 0.7)
-(deftask
-1
-"Initiate Mouse Move"
-"Cognitive Operator"
-"Gamma CV"
-'("50" "(random 0.1 1.0 1)")
-0 100
-nil '(2))
-(deftask
-2
-"cursor to"
-"Right Hand Operator"
-"Gamma CV"
-'("200" "(random 0.1 1.0 1)")
-100 200
-'(1) '(3)
-:measurable t)
-(deftask
-3
-"Cursor at"
-"System Resource"
-"Gamma CV"
-'("0" "(random 0.1 1.0 1)")
-200 0
-'(2) nil
-:measurable t)
+(define-activity-type
+"Fixation Operator"
+""
+FIXATION-OPERATOR
+EYEMVMT-OPERATOR
+"Unnamed"
+:SAME-AS-PARENT
+("100")
+:SAME-AS-PARENT
 )
