@@ -1,8 +1,11 @@
 (defparameter *debug-calibrate* nil)
-(defparameter *save-dir* "~/sanlab/Models/IBM/")
+(defparameter *save-dir* "~/sanlab/Models/IBM-proc/")
 (defparameter *limit-data-ingest* nil)
 (defparameter *ignore-subjects* '(703 711 802 806 810 811 812 817))
 (defparameter *segment* nil) ; change to nil for full aggregate models
+(defparameter *condition* 'young)
+(defparameter *cut-off* 2024)
+(defparameter *mouse-down-time* 100)
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -44,6 +47,10 @@
 		    :accessor parser-fixation-stream)
    (click-state :initform nil :accessor parser-click-state)
    (last-button :initform 0 :accessor parser-last-button)
+   (start-time :initform 0 :accessor parser-start-time)
+   (cur-target :initform 0 :accessor parser-current-target)
+   (last-mouse-up :initform 0 :accessor parser-last-mouse-up)
+   (clicks :initform 0 :accessor parser-clicks)
    (last-event :initform nil :accessor parser-last-event)
    (last-fixation :initform nil :accessor parser-last-fixation)))
 
@@ -77,106 +84,102 @@
        ((or (null fixation)
 	    (< (second event) (second fixation)))
 	(cond
-	 ((equal (parser-click-state parser) 'click)
-	  (setf args (make-hash-table))
-	  (setf (gethash :end args)
-		(+ (second event) (sixth event)))
-	  (setf *insert-items* nil)
-	  (cond ((< 0 (parser-last-button parser))
-		 (setf (gethash 'valid-trial args) t)
-		 (setf (gethash 'condition args)
-		       (if *segment*
-			   (aref *the-mapping*
-				 (1- (parser-last-button parser))
-				 (1- (- (ninth event) 80000)))
-			 'all)))
-		(t
-		 (setf (gethash 'valid-trial args) nil)))
-	  (setf (parser-last-button parser) (- (ninth event) 80000))
-	  (setf (parser-click-state parser) 'ended)
+         ((equal (third event) 'BeginBlock)
+          (setf (parser-last-button parser) 0)
 
-	  (return (values 'end-trial args)))
-	 ((and *limit-data-ingest*
-	       (<= 15 (parser-trial parser)))
-	  (setf (parser-last-event parser)
-		(read-tab-line (parser-event-stream parser))))
-	 ((equal (third event) 'URLStart)
+          (setf (parser-last-event parser)
+                (read-tab-line (parser-event-stream parser)))
+          (return 'continue))
+	 ((equal (third event) 'StartTrial)
+          ;(format t "Starting trial at ~A...~%" (second event))
 	  (setf args (make-hash-table))
 	  (setf (gethash :start args) (second event))
-	  
-	  (setf (parser-last-button parser) 0)
-	  ;(setf (parser-trial parser) 0)
+          (setf (parser-start-time parser) (first event))
+          (setf (parser-current-target parser) (fourth event))
+          (setf (parser-clicks parser) 0)
+
 	  (setf (parser-last-event parser)
 		(read-tab-line (parser-event-stream parser)))
-	  ;(format t "Parse item at ~A~%" (second event))
-	  ;(finish-output *standard-output*)
-	  
 	  (return (values 'start-trial args)))
-	 ((equal (parser-click-state parser) 'ended)
+	 ((equal (third event) 'EndTrial)
 	  (setf args (make-hash-table))
-	  (setf (gethash :start args)
-		(+ (second event) (sixth event)))
-	  (setf (parser-click-state parser) nil)
-	  (setf (parser-last-event parser)
-		(read-tab-line (parser-event-stream parser)))
-          ;(if (= 11 (parser-trial parser)) (break))
-	  (return (values 'start-trial args)))
-	 ((equal (third event) 'URLEnd)
-	  (setf args (make-hash-table))
-	  (setf (gethash :end args) (second event))
-	  (setf (gethash 'valid-trial args) nil)
+	  (setf (gethash :end args) (parser-last-mouse-up parser))
+	  (setf (gethash 'valid-trial args)
+                (and (not (equal (parser-last-button parser) 0))
+                     (< (- (first event) (parser-start-time parser))
+                        *cut-off*)
+                     (= (parser-clicks parser) 1)))
+          ;(format t "Valid trial? ~A~%" (gethash 'valid-trial args))
+          (setf (gethash 'condition args) *condition*)
+          (setf (parser-clicks parser) 0
+                (parser-start-time parser) 0)
+          (setf (parser-last-button parser) (parser-current-target parser))
+          (setf (parser-current-target parser) 0)
 	  
 	  (setf (parser-last-event parser)
 		(read-tab-line (parser-event-stream parser)))
-	  ;(format t "Parse item at ~A~%" (second event))
-	  ;(finish-output *standard-output*)
-	  
 	  (return (values 'end-trial args)))
-	 ((equal (third event) 'mouseMvmt)
+	 ((or (equal (third event) 'MouseMove)
+              (equal (third event) 'MoveMouseToButton)
+              (equal (third event) 'CorrectOvershoot))
 	  (setf args (make-hash-table))
 	  (let ((start (make-hash-table))
-		(end (make-hash-table)))
+		(end (make-hash-table))
+                (tgt (check-aoi (fourth event) (fifth event))))
 	    (setf (gethash 2 start) (second event))
 	    (setf (gethash 2 end)
 		  (+ (second event) (sixth event)))
+            ;(format t "~A~%" (sixth event))
 	    (setf (gethash :start args) start)
 	    (setf (gethash :end args) end)
 	    (setf (gethash :label args)
-		  (format nil "(~A, ~A)"
-			  (fourth event)
-			  (fifth event))))
+                  (if tgt (symbol-name tgt)
+                    (format nil "(~A, ~A)"
+                            (fourth event)
+                            (fifth event)))))
 	  
 	  (setf (parser-last-event parser)
 		(read-tab-line (parser-event-stream parser)))
-	  ;(format t "Parse item at ~A~%" (second event))
-	  ;(finish-output *standard-output*)
-	  (print-if *debug-calibrate* "Processed mouse movement~%")
-	  
 	  (if args
 	      (return (values 'mouse-move args))
 	    (return 'continue)))
-	 ((equal (third event) 'mouseClick)
+         ((equal (third event) 'SettleMouse)
+          (setf args (make-hash-table))
+          (setf (gethash :start args) (second event))
+          (setf (gethash :end args)
+                (+ (second event)
+                   (sixth event)))
+          (setf (parser-last-event parser)
+                (read-tab-line (parser-event-stream parser)))
+          (return (values 'mouse-settle args))
+          )
+         ((equal (third event) 'MouseDown)
+          (setf (parser-last-event parser)
+                (read-tab-line (parser-event-stream parser)))
+          (return 'continue)
+          )
+	 ((equal (third event) 'MouseUp)
 	  (setf args (make-hash-table))
 	  (let ((start (make-hash-table))
-		(end (make-hash-table)))
-	    (setf (gethash 2 start) (second event))
-	    (setf (gethash 2 end) (+ (second event) (sixth event)))
+		(end (make-hash-table))
+                (tgt (check-aoi (fourth event) (fifth event))))
+            (setf (parser-last-mouse-up parser) (+ (second event)
+                                                   (sixth event)))
+	    (setf (gethash 2 start) (- (second event)
+                                       *mouse-down-time*))
+	    (setf (gethash 2 end) (second event))
+            (setf (gethash 3 start) (second event)
+                  (gethash 3 end) (+ (second event)
+                                     (sixth event)))
 	    (setf (gethash :start args) start)
 	    (setf (gethash :end args) end)
 	    (setf (gethash :label args) 
-		  (if (= (ninth event) 99993) "missed"
-		    (format nil "tgt~A" (- (ninth event) 80000)))))
-	  
-	  (cond ((/= (ninth event) 99993)
-		 (setf (parser-click-state parser) 'click)
-		 (incf (parser-trial parser))
-		 (print-if *debug-calibrate* "Processed mouse click~%"))
-		(t
-		 (setf (parser-last-event parser)
-		       (read-tab-line (parser-event-stream parser)))
-		 ;(format t "Parse item at ~A~%" (second event))
-		 ;(finish-output *standard-output*)
-                 ))
+                  (if tgt (symbol-name tgt)
+                    "missed"))
+            (incf (parser-clicks parser)))
+
+          (setf (parser-last-event parser)
+                (read-tab-line (parser-event-stream parser)))
 	  
 	  (if args
 	      (return (values 'mouse-click args))
@@ -262,8 +265,8 @@
       (write-model-to-bundle p model))))
 
 (defun get-subject-files (subj)
-  (values (format nil "~~/Documents/IBM/P~A-Mouse-Data.txt" subj)
-          (format nil "~~/Documents/IBM/P~A-Fixation-Data.tsv" subj)))
+  (values (format nil "~~/Documents/IBM-proc/P~A-Mouse-Data.txt" subj)
+          (format nil "~~/Documents/IBM-proc/P~A-Fixation-Data.tsv" subj)))
 
 (defmethod save-models ((ht hash-table) (subject string))
   (ensure-directories-exist (format nil "~A~A/" *save-dir* subject))
@@ -274,13 +277,17 @@
 	   ((null l) nil)
 	 (setf (app-property 'current-controller)
 	       (make-instance 'controller))
+         ; debug
+         (if (= 158 (num-merged-trials (car l)))
+             (break))
 	 (with-open-file
 	  (out (format nil "~A~A/~A-~A-~A-~A-durations.txt"
 		       *save-dir* subject subject
 		       k (num-merged-trials (car l)) i)
 	       :if-exists :supersede :direction :output)
 	  (dolist (dur (start-resource-trial-duration (car l)))
-	    (format out "~A~%" dur)))
+	    (format out "~A~C~A~C~A~%" (first dur) #\Tab (second dur)
+                    #\Tab (third dur))))
 	 (let ((model (resource-graph-to-sanlab-model (car l)))
 	       (p (format nil "~A~A/~A-~A-~A-~A.san/"
 			  *save-dir* subject subject
@@ -291,6 +298,9 @@
 
 (defun process-young-subjs ()
   (configure-default-processor)
+  (setf *condition* 'young)
+  (setf *cut-off* 2024)
+  (setf *mouse-down-time* 100)
   (let ((subjects (remove-if
 		   #'(lambda (x)
 		       (member x *ignore-subjects*))
@@ -310,6 +320,9 @@
 
 (defun process-old-subjs ()
   (configure-default-processor)
+  (setf *condition* 'old)
+  (setf *cut-off* 4617)
+  (setf *mouse-down-time* 209)
   (let ((subjects (remove-if
 		   #'(lambda (x)
 		       (member x *ignore-subjects*))
@@ -362,10 +375,13 @@
                    :event-id (2)
                    :distribution "Constant"))
     (MOUSE-CLICK . (:type :routine
-                    :routine "Prepped Mouse Click"
-                    :event-id (2)
+                    :routine "Prepped Mouse UpDown"
+                    :event-id (2 3)
                     :distribution "Constant"))
-))
+    (MOUSE-SETTLE . (:type :activity
+                     :activity "Right Hand Operator"
+                     :label "Arrive at target"
+                     :distribution "Gamma CV"))))
 
 (defparameter *interrupts*
   '(("System Resource" "Fixation Operator")))
@@ -385,20 +401,24 @@
             (type2 (get-activity-by-typename "Cognitive Operator")))
         (if fix
             (let ((new-task (make-instance 'resource
-                                           :distribution (get-distribution type)
+                                           :distribution (get-distribution-by-typename "Gamma CV")
                                            :label "Perceive change"
                                            :duration (read-from-string (first (default-params type)))
                                            :type type
                                            :parameters (mapcar #'read-from-string
                                                                (default-params type))))
                   (new-task2 (make-instance 'resource
-                                            :distribution (get-distribution type2)
+                                            :distribution (get-distribution-by-typename "Gamma CV")
                                             :label "Verify change"
                                             :duration (read-from-string (first (default-params type2)))
                                             :type type2
                                             :parameters (mapcar #'read-from-string
                                                                 (default-params type2))))
                   types)
+              (if (> 2 (length (resource-parameters new-task)))
+                  (setf (resource-parameters new-task) (list (first (resource-parameters new-task)) 0)))
+              (if (> 2 (length (resource-parameters new-task2)))
+                  (setf (resource-parameters new-task2) (list (first (resource-parameters new-task2)) 0)))
               (setf (resource-distribution new-task) (get-distribution type)
                     (resource-earliest-start-time new-task) (best-end-time item)
                     (resource-earliest-end-time new-task) (+ (best-end-time item)
@@ -430,4 +450,3 @@
                                                             types)
                                   new-task2))
               )))))
-                                                            

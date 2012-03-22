@@ -18,9 +18,13 @@
   (format stream "~%"))
 
 (defmacro say (&optional str &rest args)
-  `(if *interactive* (progn (format *log-io* ,str ,@args) (if ,str (newline *log-io*)) (if *block* (read-line)))))
+  `(if *interactive*
+       (progn (format *log-io* ,str ,@args)
+	      (if ,str (newline *log-io*))
+	      (if *block* (read-line)))))
 
-(defmethod mean ((sequence list)) (/ (reduce #'+ sequence) (length sequence)))
+(defmethod mean ((sequence list))
+  (/ (reduce #'+ sequence) (length sequence)))
 
 (defmacro square (x)
   (let ((val (gensym)))
@@ -30,7 +34,11 @@
 (defun standard-deviation (sequence)
   (let ((mean (mean sequence))
         (n (length sequence)))
-    (sqrt (/ (reduce #'+ (map 'list #'(lambda (x) (square (- mean x))) sequence))
+    (sqrt (/ (reduce #'+
+		     (map 'list
+			  #'(lambda (x)
+			      (square (- mean x)))
+			  sequence))
              (1- n)))))
 
 (defun remove-pair (args key)

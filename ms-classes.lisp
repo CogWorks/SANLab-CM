@@ -68,7 +68,8 @@
   ((trial-duration :initform nil :initarg :trial-duration :accessor start-resource-trial-duration)))
 
 (defclass parser ()
-  ()
+  ((parser-subject :initform nil :initarg :parser-subject :accessor parser-subject)
+   (parser-trial :initform 0 :initarg :parser-trial :accessor parser-trial))
   )
 
 (defmethod initialize-parser (p)
