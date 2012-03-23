@@ -41,7 +41,7 @@
           (t
            (Norm_p (TtoZ tv df))))))
 
-(defun compute-models (lst1 lst2 out)
+(defun compute-models (lst1 lst2 out &optional (trials 30))
   (do ((x (car lst1) (car lst1))
        (y (car lst2) (car lst2)))
       ((null lst1) nil)
@@ -51,10 +51,12 @@
       (cond (model
              (setf data nil)
              (with-open-file (durations y :direction :input)
-               (do ((line (read durations nil nil) (read durations nil nil)))
+               (do ((line (read-line durations nil nil) (read-line durations nil nil)))
                    ((null line) line)
-                 (push line data)))
-             (run-model (app-property 'current-controller) 30
+                 (if (position #\Tab line)
+                     (push (third (mapcar #'read-from-string (explode-tab line))) data)
+                   (push line data))))
+             (run-model (app-property 'current-controller) trials
                         #'(lambda (method &rest args)
                             (case method
                               ('results
@@ -62,13 +64,29 @@
                                (multiple-value-bind (tv df) (t-test times data)
                                  (let ((p (TtoP tv df)) (m1 (list-mean times)) (m2 (list-mean data)))
                                    (format out "~A~C~A~C~A~C~A~C~A~C~A~C~A~C~A~%" x
-                                           #\tab m1
-                                           #\tab (stdev times m1) 
-                                           #\tab m2
-                                           #\tab (abs (* 100.0 (/ (- m1 m2) m2)))
-                                           #\tab tv #\tab df
-                                           #\tab p)))))))
+                                           #\tab (float m1 0.0)
+                                           #\tab (float (stdev times m1) 0.0)
+                                           #\tab (float m2 0.0)
+                                           #\tab (float (abs (* 100.0 (/ (- m1 m2) m2))) 0.0)
+                                           #\tab (float tv 0.0) #\tab df
+                                           #\tab (float p 0.0))))))
+                              (t
+                               (if (eql 'error method)
+                                   (break)))))
                         :wait t :show nil))))))
+
+(defun compute-calib-results (path)
+  (initialize)
+  (let ((lst (directory (format nil "~A/*.san" path))))
+    (setf lst (mapcar #'(lambda (x) (let* ((path (format nil "~A" x))
+                                           (newpath (format nil "~A-durations.txt" (subseq path 0 (- (length path) 5)))))
+                                      (list x newpath)))
+                      lst))
+    (let (a b)
+      (dolist (x lst)
+        (push (first x) a)
+        (push (second x) b))
+      (compute-models a b *standard-output* 100))))
 
 (defun compute-snt-results (path)
   (initialize)
