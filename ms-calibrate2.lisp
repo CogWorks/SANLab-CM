@@ -3,9 +3,9 @@
 (defparameter *limit-data-ingest* nil)
 (defparameter *ignore-subjects* '(703 711 802 806 810 811 812 817))
 (defparameter *segment* nil) ; change to nil for full aggregate models
-(defparameter *condition* 'young)
-(defparameter *cut-off* 2024)
-(defparameter *mouse-down-time* 100)
+(defparameter *condition* 'older)
+(defparameter *cut-off* 4617)
+(defparameter *mouse-down-time* 209)
 
 (defconstant *w-prime-mapping*
 ;         1      2      3      4      5      6      7      8      9     10     11     12     13     14     15
@@ -367,21 +367,21 @@
 
 (defparameter *event-mapping*
   '((EG-FIXATION . (:type :routine
-                    :routine "Fixation-young"
+                    :routine "Fixation-old"
                     :event-id (6)
                     :distribution "Constant"))
     (MOUSE-MOVE . (:type :routine
-                   :routine "Mouse Move"
+                   :routine "Mouse Move-old"
                    :event-id (2)
                    :distribution "Constant"))
     (MOUSE-CLICK . (:type :routine
-                    :routine "Prepped Mouse UpDown"
+                    :routine "Prepped Mouse UpDown-old"
                     :event-id (2 3)
                     :distribution "Constant"))
     (MOUSE-SETTLE . (:type :activity
                      :activity "Right Hand Operator"
                      :label "Arrive at target"
-                     :distribution "Gamma CV"))))
+                     :distribution "Constant"))))
 
 (defparameter *interrupts*
   '(("System Resource" "Fixation Operator")))
@@ -419,6 +419,17 @@
                   (setf (resource-parameters new-task) (list (first (resource-parameters new-task)) 0)))
               (if (> 2 (length (resource-parameters new-task2)))
                   (setf (resource-parameters new-task2) (list (first (resource-parameters new-task2)) 0)))
+              (case *condition*
+                ('younger
+                 (setf (first (resource-parameters new-task)) 100)
+                 (setf (first (resource-parameters new-task2)) 50)
+                 (setf (resource-duration new-task) 100)
+                 (setf (resource-duration new-task2) 50))
+                ('older
+                 (setf (first (resource-parameters new-task)) 178)
+                 (setf (first (resource-parameters new-task2)) 118)
+                 (setf (resource-duration new-task) 178)
+                 (setf (resource-duration new-task2) 118)))
               (setf (resource-distribution new-task) (get-distribution type)
                     (resource-earliest-start-time new-task) (best-end-time item)
                     (resource-earliest-end-time new-task) (+ (best-end-time item)
