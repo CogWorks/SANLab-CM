@@ -23,7 +23,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 RIGHTHAND-OPERATOR
 MOTOR-OPERATOR
 "Unnamed"
-"Gamma CV"
-("200" "(RANDOM 0.1 1.0 1)")
+:SAME-AS-PARENT
+(:SAME-AS-PARENT)
 :SAME-AS-PARENT
 )
