@@ -18,7 +18,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 |#
 
 (defroutine
-"Prepped Mouse UpDown"
+"Prepped Mouse UpDown-old"
 #(:RGB 0.7 0.3 0.0)
 (deftask
 1

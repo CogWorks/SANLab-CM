@@ -18,7 +18,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 |#
 
 (defroutine
-"Mouse Move"
+"Mouse Move-old"
 #(:RGB 0.0 0.3 0.7)
 (deftask
 1
