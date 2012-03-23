@@ -23,8 +23,8 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 (nil nil nil)
 (lambda ; start lambda
 (mean cv num)
-(if (<= cv 0)
-    (error "Multi-Unit Gamma CV given a coefficient of variation <= 0. Unable to continue."))
+(if (< cv 0)
+    (error "Multi-Unit Gamma CV given a coefficient of variation < 0. Unable to continue."))
 (let ((sum 0) (mean2 (if (> num 0) (/ mean num) 0)))
   (dotimes (x num sum)
     (setf sum (+ sum (call-distribution "Gamma CV" mean2 cv)))))
