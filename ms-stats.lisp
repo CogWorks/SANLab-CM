@@ -2,13 +2,19 @@
 
 (defun Norm_p (z)
   (let ((z (abs z)))
-    (expt (1+ (* z (+ 0.0498673470
-                      (* z (+ 0.0211410061
-                              (* z (+ 0.0032776263
-                                      (* z (+ 0.0000380036
-                                              (* z (+ 0.0000488906
-                                                      (* z 0.0000053830))))))))))))
-          -16)))
+    (expt
+     (1+ (* z
+	    (+ 0.0498673470
+	       (* z
+		  (+ 0.0211410061
+		     (* z
+			(+ 0.0032776263
+			   (* z
+			      (+ 0.0000380036
+				 (* z
+				    (+ 0.0000488906
+				       (* z 0.0000053830))))))))))))
+     -16)))
 
 (defun TtoZ (tv df)
   (let* ((a9 (- df 0.5))
@@ -48,32 +54,39 @@
     (setf (app-property 'current-controller) (make-instance 'controller :model (make-instance 'model)))
     (let ((model (open-model (app-property 'current-controller) x)) data)
       (setf lst1 (cdr lst1) lst2 (cdr lst2))
-      (cond (model
-             (setf data nil)
-             (with-open-file (durations y :direction :input)
-               (do ((line (read-line durations nil nil) (read-line durations nil nil)))
-                   ((null line) line)
-                 (if (position #\Tab line)
-                     (push (third (mapcar #'read-from-string (explode-tab line))) data)
-                   (push line data))))
-             (run-model (app-property 'current-controller) trials
-                        #'(lambda (method &rest args)
-                            (case method
-                              ('results
-                               (let ((times (mapcar #'trial-result-duration (first args))))
-                               (multiple-value-bind (tv df) (t-test times data)
-                                 (let ((p (TtoP tv df)) (m1 (list-mean times)) (m2 (list-mean data)))
-                                   (format out "~A~C~A~C~A~C~A~C~A~C~A~C~A~C~A~%" x
-                                           #\tab (float m1 0.0)
-                                           #\tab (float (stdev times m1) 0.0)
-                                           #\tab (float m2 0.0)
-                                           #\tab (float (abs (* 100.0 (/ (- m1 m2) m2))) 0.0)
-                                           #\tab (float tv 0.0) #\tab df
-                                           #\tab (float p 0.0))))))
-                              (t
-                               (if (eql 'error method)
-                                   (break)))))
-                        :wait t :show nil))))))
+      (cond
+       (model
+	(setf data nil)
+	(with-open-file
+	 (durations y :direction :input)
+	 (do ((line (read-line durations nil nil) (read-line durations nil nil)))
+	     ((null line) line)
+	   (if (position #\Tab line)
+	       (push (third (mapcar #'read-from-string (explode-tab line))) data)
+	     (push line data))))
+	(run-model
+	 (app-property 'current-controller) trials
+	 #'(lambda (method &rest args)
+	     (case method
+	       ('results
+		(let ((times (mapcar #'trial-result-duration
+				     (first args))))
+		  (multiple-value-bind (tv df)
+		      (t-test times data)
+		    (let ((p (TtoP tv df))
+			  (m1 (list-mean times))
+			  (m2 (list-mean data)))
+		      (format out "~A~C~A~C~A~C~A~C~A~C~A~C~A~C~A~%" x
+			      #\tab (float m1 0.0)
+			      #\tab (float (stdev times m1) 0.0)
+			      #\tab (float m2 0.0)
+			      #\tab (float (abs (* 100.0 (/ (- m1 m2) m2))) 0.0)
+			      #\tab (float tv 0.0) #\tab df
+			      #\tab (float p 0.0))))))
+	       (t
+		(if (eql 'error method)
+		    (break)))))
+	 :wait t :show nil))))))
 
 (defun compute-calib-results (path)
   (initialize)

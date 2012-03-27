@@ -13,7 +13,9 @@
   (let ((image-name (lw:lisp-image-name)))
     (if (not (or (contains image-name "LispWorks.app")
 		 (contains image-name "LispWorks Personal.app")))
-        (setf *app-path* (get-dir (lw:lisp-image-name)) *app-type*
+        (setf *app-path* 
+	      (get-dir (lw:lisp-image-name))
+	      *app-type*
 	      #+win32 'windows #+cocoa 'mac)
       (setf *app-type* 'lispworks)))
   (setf *PROGRAM-DIRECTORY*
@@ -145,7 +147,8 @@
                               (end hash-table)
                               (info hash-table)
                               (deps list)
-                              &optional (results (make-hash-table)))
+                              &optional
+			      (results (make-hash-table)))
   (let ((lookup #'(lambda (x) (gethash (uid x) results)))
         new-task label)
     (dolist (dep deps results)
@@ -163,13 +166,16 @@
                      :routine routine
                      :task dep
                      :label label
-                     :parameters (mapcar #'read-from-string
-                                         (parameters dep))))
+                     :parameters
+		     (mapcar #'read-from-string
+			     (parameters dep))))
              (setf (first (resource-parameters new-task))
                    (- (gethash (uid dep) end)
                       (gethash (uid dep) start)))
-             (setf (resource-start-time new-task) (gethash (uid dep) start))
-             (setf (resource-end-time new-task) (gethash (uid dep) end))
+             (setf (resource-start-time new-task)
+		   (gethash (uid dep) start))
+             (setf (resource-end-time new-task)
+		   (gethash (uid dep) end))
              (setf (resource-duration new-task)
                    (- (gethash (uid dep) end)
                       (gethash (uid dep) start)))
@@ -196,8 +202,9 @@
                      :routine routine
                      :task dep
                      :label label
-                     :parameters (mapcar #'read-from-string
-                                         (parameters dep))))
+                     :parameters
+		     (mapcar #'read-from-string
+			     (parameters dep))))
              (setf (gethash (uid dep) results) new-task)
              (let ((stl (mapcar #'(lambda (x) (if x (best-end-time x)))
                                 (mapcar lookup (edges-in dep))))
@@ -205,14 +212,20 @@
                                 (mapcar lookup (edges-out dep)))))
                (setf stl (remove-if #'null stl)
                      etl (remove-if #'null etl))
-               (if (< 0 (length stl)) (setf (resource-earliest-start-time new-task) (apply #'max stl)))
-               (if (< 0 (length etl)) (setf (resource-latest-end-time new-task) (apply #'min etl)))
+               (if (< 0 (length stl))
+		   (setf (resource-earliest-start-time new-task)
+			 (apply #'max stl)))
+               (if (< 0 (length etl))
+		   (setf (resource-latest-end-time new-task)
+			 (apply #'min etl)))
                (if (valid-time? (resource-earliest-start-time new-task))
-                   (setf (resource-earliest-end-time new-task) (+ (resource-earliest-start-time new-task)
-                                                                  (first (resource-parameters new-task)))))
+                   (setf (resource-earliest-end-time new-task)
+			 (+ (resource-earliest-start-time new-task)
+			    (first (resource-parameters new-task)))))
                (if (valid-time? (resource-latest-end-time new-task))
-                   (setf (resource-latest-start-time new-task) (- (resource-latest-end-time new-task)
-                                                                  (first (resource-parameters new-task))))))
+                   (setf (resource-latest-start-time new-task)
+			 (- (resource-latest-end-time new-task)
+			    (first (resource-parameters new-task))))))
              (build-ir-instance2 routine start end info
                                  (edges-out dep) results)
              (build-ir-instance2 routine start end info
@@ -225,7 +238,8 @@
   
 
 (defmethod compute-earliest-start-time ((root resource)
-					&optional (hint -inf))
+					&optional
+					(hint -inf))
   (declare (ignore hint))
   (let (*block*)
     (say "Computing earliest start time for UID ~A"
@@ -395,9 +409,10 @@
                 (push current (resource-dependents task))
                 (if (resource-earliest-start-time task)
                     (setf end-time
-			  (max end-time
-			       (+ (resource-earliest-start-time task)
-				  (resource-duration task)))))
+			  (max
+			   end-time
+			   (+ (resource-earliest-start-time task)
+			      (resource-duration task)))))
                 (setf (resource-latest-end-time task)
                       (if last-end-time (max last-end-time end-time)
                         end-time)))))
@@ -452,9 +467,17 @@
 				  :key 'car))
                   (iroutine (get-iroutine-by-name routine-name))
 ;                  (routine (build-ir-instance iroutine info)))
-                  (routine (build-ir-instance2 iroutine start-time end-time info
-                                               (mapcar #'(lambda (x) (find x (task-list iroutine) :key #'uid))
-                                                       event-id))))
+                  (routine
+		   (build-ir-instance2
+		    iroutine
+		    start-time
+		    end-time
+		    info
+		    (mapcar 
+		     #'(lambda (x)
+			 (find x (task-list iroutine)
+			       :key #'uid))
+		     event-id))))
              #|
              (dolist (id event-id)
                (let ((item (gethash id routine)))
@@ -502,8 +525,9 @@
 				  :end-time end-time
 				  :duration (- end-time start-time)
 				  :parameters
-				  (mapcar #'read-from-string
-					  (get-default-params activity))
+				  (mapcar
+				   #'read-from-string
+				   (get-default-params activity))
 				  :type activity
 				  :label label
 				  :distribution distribution-name))
@@ -592,29 +616,37 @@
 		       (let ((lena (length (resource-dependents a)))
 			     (lenb (length (resource-dependents b))))
 			 (if (gethash lena child-part)
-			     (push a (first (gethash lena
-						     child-part)))
+			     (push a
+				   (first
+				    (gethash 
+				     lena
+				     child-part)))
 			   (setf (gethash lena child-part)
 				 (list (list a) nil)))
 			 (if (gethash lenb child-part)
-			     (push b (second (gethash lenb
-						      child-part)))
+			     (push b
+				   (second
+				    (gethash
+				     lenb
+				     child-part)))
 			   (setf (gethash lenb child-part)
 				 (list nil (list b))))))
 		   (first entries) (second entries))
-	     (maphash #'(lambda (num entries)
-			  (declare (ignore num))
-			  (if (/= (length (first entries))
-				  (length (second entries)))
-			      (return-from failed))
-			  (dolist (a (first entries))
-			    (dolist (b (second entries))
-			      (if (equal (gethash a map1) (gethash b map2))
-				  (cond ((null (gethash a map1))
-					 (if (isomorphic-checker
-					      a b map1 map2)
-					     t)))))))
-		      child-part)))
+	     (maphash
+	      #'(lambda (num entries)
+		  (declare (ignore num))
+		  (if (/= (length (first entries))
+			  (length (second entries)))
+		      (return-from failed))
+		  (dolist (a (first entries))
+		    (dolist (b (second entries))
+		      (if (equal (gethash a map1)
+				 (gethash b map2))
+			  (cond ((null (gethash a map1))
+				 (if (isomorphic-checker
+				      a b map1 map2)
+				     t)))))))
+	      child-part)))
        type-part)
       (values map1 map2))))
 
@@ -724,47 +756,49 @@
 			    &optional (ignore-types nil)
 			    (hash (make-hash-table)))
   (if (= (size-of-graph graph1) (size-of-graph graph2))
-  (cond ((and (eq (gethash graph1 hash) graph2)
-              (eq (gethash graph2 hash) graph1))
-         hash)
-        ((or (gethash graph1 hash) (gethash graph2 hash))
-         nil)
-        (t
-         (if (equal (resource-type graph1) (resource-type graph2))
-             (if (member (resource-type graph1) ignore-types)
-                 hash
-               (if (equal (resource-extra graph1)
-			  (resource-extra graph2))
-                   (cond ((= (length (resource-dependents graph1))
-			     (length (resource-dependents graph2)))
-                          ; Inefficient O(n*m) loop, but n and m should be small (i.e. < 5)
-                          (setf (gethash graph1 hash) graph2
-                                (gethash graph2 hash) graph1)
-                          (let* ((check
-				  #'(lambda (x)
-				      #'(lambda (y)
-					  (loop for n in x do
-						(if (are-isomorphic?
-						     y n ignore-types
-						     hash)
-						    (return n))))))
-                            (g1-iso
-			     (mapcar
-			      (funcall check
-				       (resource-dependents graph2))
-			      (resource-dependents graph1)))
-                            (g2-iso
-			     (mapcar
-			      (funcall check
-				       (resource-dependents graph1))
-			      (resource-dependents graph2))))
-                            (if (and (not (member nil g1-iso))
-                                     (not (member nil g2-iso)))
-                                hash
-                              (progn
-                                (remhash graph1 hash)
-                                (remhash graph2 hash)
-                                nil))))))))))))
+  (cond
+   ((and (eq (gethash graph1 hash) graph2)
+	 (eq (gethash graph2 hash) graph1))
+    hash)
+   ((or (gethash graph1 hash) (gethash graph2 hash))
+    nil)
+   (t
+    (if (equal (resource-type graph1) (resource-type graph2))
+	(if (member (resource-type graph1) ignore-types)
+	    hash
+	  (if (equal (resource-extra graph1)
+		     (resource-extra graph2))
+	      (cond
+	       ((= (length (resource-dependents graph1))
+		   (length (resource-dependents graph2)))
+	      	; Inefficient O(n*m) loop, but n and m should be small (i.e. < 5)
+		(setf (gethash graph1 hash) graph2
+		      (gethash graph2 hash) graph1)
+		(let* ((check
+			#'(lambda (x)
+			    #'(lambda (y)
+				(loop for n in x do
+				      (if (are-isomorphic?
+					   y n ignore-types
+					   hash)
+					  (return n))))))
+		       (g1-iso
+			(mapcar
+			 (funcall check
+				  (resource-dependents graph2))
+			 (resource-dependents graph1)))
+		       (g2-iso
+			(mapcar
+			 (funcall check
+				  (resource-dependents graph1))
+			 (resource-dependents graph2))))
+		  (if (and (not (member nil g1-iso))
+			   (not (member nil g2-iso)))
+		      hash
+		    (progn
+		      (remhash graph1 hash)
+		      (remhash graph2 hash)
+		      nil))))))))))))
 
 (defmethod merge-trials ((self resource) (mapping hash-table))
   (if (numberp (resource-duration self))
@@ -866,11 +900,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position
+		  (first (gethash
+			  type
+			  (processor-queues
+			   (get-processor))))
+		  (flatten (as-list
+			    (processor-queues
+			     (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -898,11 +935,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position (first
+			    (gethash
+			     type
+			     (processor-queues
+			      (get-processor))))
+                           (flatten (as-list
+				     (processor-queues
+				      (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -930,11 +970,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position (first
+			    (gethash
+			     type
+			     (processor-queues
+			      (get-processor))))
+                           (flatten (as-list
+				     (processor-queues
+				      (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -962,11 +1005,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position (first
+			    (gethash
+			     type
+			     (processor-queues
+			      (get-processor))))
+                           (flatten (as-list
+				     (processor-queues
+				      (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -994,11 +1040,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position (first
+			    (gethash
+			     type
+			     (processor-queues
+			      (get-processor))))
+                           (flatten (as-list
+				     (processor-queues
+				      (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -1026,11 +1075,14 @@
 		  :predecessors (list last)
 		  :dependents (list next)))
            (setf (resource-queue-number act)
-                 (position (first (gethash type
-					   (processor-queues
-					    (get-processor))))
-                           (flatten (as-list (processor-queues
-					      (get-processor))))))
+                 (position (first
+			    (gethash
+			     type
+			     (processor-queues
+			      (get-processor))))
+                           (flatten (as-list
+				     (processor-queues
+				      (get-processor))))))
            (push act (resource-dependents last))
            (push act (resource-predecessors next))
            (append queue (list act next)))
@@ -1042,23 +1094,25 @@
 
 (defmethod fill-gaps ((proc processor) (type activity-type))
   (let ((constraint (resource-constraint-for-activity proc type)))
-    (cond ((and constraint
-		(eq (resource-constraint-method constraint)
-		    'serial))
-           (if (< 1 (length (resource-queue-tree
-			     (first (resource-constraint-queues
-				     constraint)))))
-               (setf (resource-queue-tree
-		      (first (resource-constraint-queues constraint)))
-                     (reduce #'(lambda (x y)
-				 (fill-gap x y type)) 
-                             (resource-queue-tree
-			      (first (resource-constraint-queues
-				      constraint)))))))
-          (constraint
-           (let (*block*) (say "*** Warning: tried to fill gaps for parallel constraints, not sure how to proceed at the moment.")))
-          (t
-           (let (*block*) (say "*** Warning: unable to find type ~A in list of constraints" type))))))
+    (cond
+     ((and constraint
+	   (eq (resource-constraint-method constraint)
+	       'serial))
+      (if (< 1 (length (resource-queue-tree
+			(first (resource-constraint-queues
+				constraint)))))
+	  (setf (resource-queue-tree
+		 (first (resource-constraint-queues
+			 constraint)))
+		(reduce #'(lambda (x y)
+			    (fill-gap x y type)) 
+			(resource-queue-tree
+			 (first (resource-constraint-queues
+				 constraint)))))))
+     (constraint
+      (let (*block*) (say "*** Warning: tried to fill gaps for parallel constraints, not sure how to proceed at the moment.")))
+     (t
+      (let (*block*) (say "*** Warning: unable to find type ~A in list of constraints" type))))))
 
 (defmethod fill-gaps ((proc processor) (type string))
   (fill-gaps proc (get-activity-by-typename type)))
@@ -1101,17 +1155,23 @@
       (setf (model (app-property 'current-controller))
 	    (setf model (make-instance 'model))))
   (if (null (resource-node res))
-      (setf (resource-node res)
-            (create-activity-in-model
-	     model (resource-type res)
-	     :x (* (resource-depth res) 200)
-	     :y (* (resource-queue-number res) 150)
-	     :ir-type (resource-iroutine res)
-	     :ir-task (resource-iroutine-task res)
-	     :ir-append ""
-	     :label (resource-label res)
-	     :distribution (resource-distribution res)
-	     :params (compute-params res))))
+      (progn
+        (if (and (equal (resource-distribution res)
+                        "Constant")
+                 (listp (resource-duration res))
+                 (< 1 (length (resource-duration res))))
+            (setf (resource-distribution res) "Gamma CV"))
+        (setf (resource-node res)
+              (create-activity-in-model
+               model (resource-type res)
+               :x (* (resource-depth res) 200)
+               :y (* (resource-queue-number res) 150)
+               :ir-type (resource-iroutine res)
+               :ir-task (resource-iroutine-task res)
+               :ir-append ""
+               :label (resource-label res)
+               :distribution (resource-distribution res)
+               :params (compute-params res)))))
   (setf (edges-out (resource-node res))
         (mapcar #'(lambda (x) 
                     (if (not (resource-node x))
@@ -1288,200 +1348,209 @@
               (let ((sym (read)))
                 (if (eq sym :abort) (return trials)))))
         (if distribution (setf (gethash :distribution args) distribution))
-        (cond ((eql result 'continue)
-               (let (*block*) (say "Continuing...")))
-              ((eql result 'start-trial)
-               (print-if *super-debug*
-                         "Starting new trial at ~A~%"
-                         (gethash :start args))
-               (let ((*interactive* t) *block*)
-		 (say "Starting new trial at ~A"
-		      (gethash :start args)))
-               (reset-processor (get-processor))
-               (setf (trial (get-processor)) (gethash :start args)))
-              ((eql result 'end-trial)
-               (let ((*interactive* t) *block*)
-		 (say "Stopping trial at ~A"
-		      (gethash :end args)))
-               (if (not (in-trial? (get-processor)))
-                   (error "Stopping a trial that hasn't be started!"))
-               (maphash
-		#'(lambda (k v)
-		    (declare (ignore k))
-		    (mapcar
-		     #'(lambda (q)
-			 (let ((item (first (last (resource-queue-tree q)))))
-			   (cond 
-			    ((null item) nil)
-			    ((and (>= (best-start-time item)
-				      (gethash :end args))
-				  (< 0 (resource-duration item)))
-			     (delete-forward item)
-			     (delete-backward item (gethash :end args))
-			     (dolist (queue
-				      (gethash (resource-type item)
-					       (processor-queues
-						(get-processor))))
-			       (if (member item
-					   (resource-queue-tree
-					    queue))
-				   (setf (resource-queue-tree queue)
-					 (remove item
-						 (resource-queue-tree
-						  queue))))))
+        (cond
+	 ((eql result 'continue)
+	  (let (*block*) (say "Continuing...")))
+	 ((eql result 'start-trial)
+	  (print-if *super-debug*
+		    "Starting new trial at ~A~%"
+		    (gethash :start args))
+	  (let ((*interactive* t) *block*)
+	    (say "Starting new trial at ~A"
+		 (gethash :start args)))
+	  (reset-processor (get-processor))
+	  (setf (trial (get-processor)) (gethash :start args)))
+	 ((eql result 'end-trial)
+	  (let ((*interactive* t) *block*)
+	    (say "Stopping trial at ~A"
+		 (gethash :end args)))
+	  (if (not (in-trial? (get-processor)))
+	      (error "Stopping a trial that hasn't be started!"))
+	  (maphash
+	   #'(lambda (k v)
+	       (declare (ignore k))
+	       (mapcar
+		#'(lambda (q)
+		    (let ((item (first (last (resource-queue-tree q)))))
+		      (cond 
+		       ((null item) nil)
+		       ((and (>= (best-start-time item)
+				 (gethash :end args))
+			     (< 0 (resource-duration item)))
+			(delete-forward item)
+			(delete-backward item (gethash :end args))
+			(dolist (queue
+				 (gethash (resource-type item)
+					  (processor-queues
+					   (get-processor))))
+			  (if (member item
+				      (resource-queue-tree
+				       queue))
+			      (setf (resource-queue-tree queue)
+				    (remove
+				     item
+				     (resource-queue-tree
+				      queue))))))
 			    ; Truncate activities that start in this trial but end
 			    ; outside the trial
-			    ((and (valid-time? (resource-end-time item))
-				  (> (resource-end-time item)
-				     (gethash :end args)))
-			     (setf (resource-end-time item)
-				   (gethash :end args))
-			     (setf (resource-duration item)
-				   (- (resource-end-time item)
-				      (resource-start-time item)))
-			     (setf (first (resource-parameters item))
-				   (resource-duration item)))
-			    ((and (valid-time? (resource-latest-end-time item))
-				  (> (resource-latest-end-time item)
-				     (gethash :end args)))
-			     (setf (resource-latest-end-time item)
-				   (gethash :end args))
-			     (setf (resource-duration item)
-				   (- (resource-latest-end-time item)
-				      (resource-latest-start-time item)))
-			     (setf (first (resource-parameters item))
-				   (resource-duration item)))
-			    ((and (valid-time?
-				   (resource-earliest-end-time item))
-				  (> (resource-earliest-end-time item)
-				     (gethash :end args)))
-			     (setf (resource-earliest-end-time item)
-				   (gethash :end args))
-			     (setf (resource-duration item)
-				   (- (resource-earliest-end-time item)
-				      (resource-earliest-start-time item)))
-			     (setf (first (resource-parameters item))
-				   (resource-duration item))))))
-		     v))
-		(processor-queues (get-processor)))
-;               (loop for type in *fill-gaps* do
-;                     (fill-gaps (get-processor) type))
-               
-               (setf cur-trial
-		     (make-instance
-		      'start-resource
-		      :duration 0
-		      :start-time (in-trial? (get-processor))
-		      :end-time (in-trial? (get-processor))
-		      :type (get-activity-by-typename "Cognitive Operator")
-		      :label "Start Trial"
-		      :distribution "Constant"
-		      :parameters '(0)
-		      :trial-duration
-		      (list (list 
-                             (parser-subject p)
-                             (parser-trial p)
-                             (- (gethash :end args)
-                                (in-trial? (get-processor)))))))
-
-               (let ((end-trial
-		      (make-instance
-		       'resource
-		       :duration 0
-		       :type (get-activity-by-typename "Cognitive Operator")
-		       :label "End Trial"
-		       :distribution "Constant"
-		       :parameters '(0))))
-                 (setf (resource-queue-number end-trial)
-                       (position (first
+		       ((and (valid-time? (resource-end-time item))
+			     (> (resource-end-time item)
+				(gethash :end args)))
+			(setf
+			 (resource-end-time item)
+			 (gethash :end args))
+			(setf
+			 (resource-duration item)
+			 (- (resource-end-time item)
+			    (resource-start-time item)))
+			(setf (first (resource-parameters item))
+			      (resource-duration item)))
+		       ((and (valid-time? (resource-latest-end-time item))
+			     (> (resource-latest-end-time item)
+				(gethash :end args)))
+			(setf
+			 (resource-latest-end-time item)
+			 (gethash :end args))
+			(setf
+			 (resource-duration item)
+			 (- (resource-latest-end-time item)
+			    (resource-latest-start-time item)))
+			(setf
+			 (first (resource-parameters item))
+			 (resource-duration item)))
+		       ((and (valid-time?
+			      (resource-earliest-end-time item))
+			     (> (resource-earliest-end-time item)
+				(gethash :end args)))
+			(setf
+			 (resource-earliest-end-time item)
+			 (gethash :end args))
+			(setf
+			 (resource-duration item)
+			 (- (resource-earliest-end-time item)
+			    (resource-earliest-start-time item)))
+			(setf
+			 (first (resource-parameters item))
+			 (resource-duration item))))))
+		v))
+	   (processor-queues (get-processor)))
+	   ;               (loop for type in *fill-gaps* do
+	   ;                     (fill-gaps (get-processor) type))
+	  (setf cur-trial
+		(make-instance
+		 'start-resource
+		 :duration 0
+		 :start-time (in-trial? (get-processor))
+		 :end-time (in-trial? (get-processor))
+		 :type (get-activity-by-typename "Cognitive Operator")
+		 :label "Start Trial"
+		 :distribution "Constant"
+		 :parameters '(0)
+		 :trial-duration
+		 (list (list 
+			(parser-subject p)
+			(parser-trial p)
+			(- (gethash :end args)
+			   (in-trial? (get-processor)))))))
+	  
+	  (let ((end-trial
+		 (make-instance
+		  'resource
+		  :duration 0
+		  :type (get-activity-by-typename "Cognitive Operator")
+		  :label "End Trial"
+		  :distribution "Constant"
+		  :parameters '(0))))
+	    (setf (resource-queue-number end-trial)
+		  (position (first
+			     (gethash
+			      (get-activity-by-typename
+			       "Cognitive Operator")
+			      (processor-queues
+			       (get-processor))))
+			    (flatten (as-list
+				      (processor-queues
+				       (get-processor))))))
+	    (loop for queue-list in
+		  (as-list (processor-queues (get-processor)))
+		  do
+		  (loop for queue in queue-list do 
+			(let ((start
+			       (first (resource-queue-tree
+				       queue)))
+			      (end
+			       (first
+				(last (resource-queue-tree
+				       queue)))))
+			  (if (or (not start) (not end)) (return))
+			  (cond
+			   ((not (member (typename (resource-type start))
+					 *fill-gaps*
+					 :test #'equal))
+			    (push start
+				  (resource-dependents cur-trial))
+			    (push cur-trial
+				  (resource-predecessors start))))
+			  (push end
+				(resource-predecessors end-trial))
+			  (push end-trial
+				(resource-dependents end)))))
+	    (loop for constraint in
+		  (flatten (as-list (processor-constraints
+				     (get-processor))))
+		  do
+		  (if (eq (resource-constraint-method constraint)
+			  'serial)
+		      (mapc #'serialize-queue
+			    (resource-constraint-queues constraint))))
+	    (let ((queue (first
+			  (gethash
+			   (get-activity-by-typename
+			    "Cognitive Operator")
+			   (processor-queues
+			    (get-processor))))))
+	      (setf (resource-queue-number cur-trial)
+		    (position queue
+			      (flatten (as-list
+					(processor-queues
+					 (get-processor))))))
+	      (setf (resource-queue-tree queue)
+		    (cons cur-trial (resource-queue-tree queue))))
+	    (loop for type in *fill-gaps* do
+		  (fill-gaps (get-processor) type))
+	    
+	    (cond ((resource-dependents cur-trial)
+		   (compute-depths cur-trial)
+		   (if (gethash 'valid-trial args)
+		       (if merge-trials
+			   (setf (gethash
+				  (gethash 'condition args)
+				  trials)
+				 (attempt-merge-trials
 				  (gethash
-				   (get-activity-by-typename
-				    "Cognitive Operator")
-				   (processor-queues
-				    (get-processor))))
-                                 (flatten (as-list
-					   (processor-queues
-					    (get-processor))))))
-                 (loop for queue-list in
-		       (as-list (processor-queues (get-processor)))
-		       do
-                       (loop for queue in queue-list do 
-                             (let ((start
-				    (first (resource-queue-tree
-					    queue)))
-                                   (end
-				    (first
-				     (last (resource-queue-tree
-					    queue)))))
-                               (if (or (not start) (not end)) (return))
-                               (cond
-                                ((not (member (typename (resource-type start))
-                                              *fill-gaps*
-                                              :test #'equal))
-                                 (push start
-                                       (resource-dependents cur-trial))
-                                 (push cur-trial
-                                       (resource-predecessors start))))
-                               (push end
-                                     (resource-predecessors end-trial))
-                               (push end-trial
-                                     (resource-dependents end)))))
-                 (loop for constraint in
-		     (flatten (as-list (processor-constraints
-					(get-processor))))
-		     do
-                     (if (eq (resource-constraint-method constraint)
-			     'serial)
-                         (mapc #'serialize-queue
-			       (resource-constraint-queues constraint))))
-                 (let ((queue (first
-                               (gethash
-                                (get-activity-by-typename
-                                 "Cognitive Operator")
-                                (processor-queues
-                                 (get-processor))))))
-                   (setf (resource-queue-number cur-trial)
-                         (position queue
-                                   (flatten (as-list
-                                             (processor-queues
-                                              (get-processor))))))
-                   (setf (resource-queue-tree queue)
-                         (cons cur-trial (resource-queue-tree queue))))
-                 (loop for type in *fill-gaps* do
-                       (fill-gaps (get-processor) type))
-
-                 (cond ((resource-dependents cur-trial)
-                        (compute-depths cur-trial)
-                        (if (gethash 'valid-trial args)
-                            (if merge-trials
-                                (setf (gethash
-				       (gethash 'condition args)
-				       trials)
-				      (attempt-merge-trials
-				       (gethash
-					(gethash 'condition args)
-					trials) cur-trial))
-                              (push cur-trial
-				    (gethash
-				     (gethash 'condition args)
-				     trials))))
-                        (cond (*trial-limit*
-                               (setf count (1+ count))
-                               (if (= count *trial-limit*)
-				   (return trials))))))
-                 (setf (trial (get-processor)) nil)
-                 (reset-processor (get-processor))))
-              ((member result *event-mapping* :key #'car)
-               (if (in-trial? (get-processor))
-                   (let ((start (gethash :start args))
-                         (end (gethash :end args)))
-                     (raise-event result start end args)
-                     (say "Processing event ~A" result))))
-              (result
-               (say "Unknown event ~A from parser" result))
-              (t
-               (setf done nil)
-               (say "Processing complete")))))
+				   (gethash 'condition args)
+				   trials) cur-trial))
+			 (push cur-trial
+			       (gethash
+				(gethash 'condition args)
+				trials))))
+		   (cond (*trial-limit*
+			  (setf count (1+ count))
+			  (if (= count *trial-limit*)
+			      (return trials))))))
+	    (setf (trial (get-processor)) nil)
+	    (reset-processor (get-processor))))
+	 ((member result *event-mapping* :key #'car)
+	  (if (in-trial? (get-processor))
+	      (let ((start (gethash :start args))
+		    (end (gethash :end args)))
+		(raise-event result start end args)
+		(say "Processing event ~A" result))))
+	 (result
+	  (say "Unknown event ~A from parser" result))
+	 (t
+	  (setf done nil)
+	  (say "Processing complete")))))
     (setf *answer* trials)))
 
 (defun test-compute-boundaries ()

@@ -1,9 +1,9 @@
 (defparameter *debug-calibrate* nil)
 (defparameter *save-dir* "~/sanlab/Models/IBM-proc/")
 (defparameter *limit-data-ingest* nil)
-(defparameter *ignore-subjects* '(703 711 802 806 810 811 812 817))
+(defparameter *ignore-subjects* '(703 711 802 804 805 806 810 811 812 817))
 (defparameter *segment* nil) ; change to nil for full aggregate models
-(defparameter *condition* 'older)
+(defparameter *condition* 'old)
 (defparameter *cut-off* 4617)
 (defparameter *mouse-down-time* 209)
 
@@ -163,8 +163,9 @@
 	  (let ((start (make-hash-table))
 		(end (make-hash-table))
                 (tgt (check-aoi (fourth event) (fifth event))))
-            (setf (parser-last-mouse-up parser) (+ (second event)
-                                                   (sixth event)))
+            (setf (parser-last-mouse-up parser)
+		  (+ (second event)
+		     (sixth event)))
 	    (setf (gethash 2 start) (- (second event)
                                        *mouse-down-time*))
 	    (setf (gethash 2 end) (second event))
@@ -400,44 +401,56 @@
             (type (get-activity-by-typename "Perceptual Operator (Visual)"))
             (type2 (get-activity-by-typename "Cognitive Operator")))
         (if fix
-            (let ((new-task (make-instance 'resource
-                                           :distribution (get-distribution-by-typename "Gamma CV")
-                                           :label "Perceive change"
-                                           :duration (read-from-string (first (default-params type)))
-                                           :type type
-                                           :parameters (mapcar #'read-from-string
-                                                               (default-params type))))
-                  (new-task2 (make-instance 'resource
-                                            :distribution (get-distribution-by-typename "Gamma CV")
-                                            :label "Verify change"
-                                            :duration (read-from-string (first (default-params type2)))
-                                            :type type2
-                                            :parameters (mapcar #'read-from-string
-                                                                (default-params type2))))
+            (let ((new-task
+		   (make-instance
+		    'resource
+		    :distribution (get-distribution-by-typename "Gamma CV")
+		    :label "Perceive change"
+		    :duration (read-from-string (first (default-params type)))
+		    :type type
+		    :parameters
+		    (mapcar #'read-from-string
+			    (default-params type))))
+                  (new-task2
+		   (make-instance
+		    'resource
+		    :distribution (get-distribution-by-typename "Gamma CV")
+		    :label "Verify change"
+		    :duration (read-from-string (first (default-params type2)))
+		    :type type2
+		    :parameters
+		    (mapcar #'read-from-string
+			    (default-params type2))))
                   types)
               (if (> 2 (length (resource-parameters new-task)))
                   (setf (resource-parameters new-task) (list (first (resource-parameters new-task)) 0)))
               (if (> 2 (length (resource-parameters new-task2)))
                   (setf (resource-parameters new-task2) (list (first (resource-parameters new-task2)) 0)))
               (case *condition*
-                ('younger
+                ('young
                  (setf (first (resource-parameters new-task)) 100)
                  (setf (first (resource-parameters new-task2)) 50)
                  (setf (resource-duration new-task) 100)
                  (setf (resource-duration new-task2) 50))
-                ('older
+                ('old
                  (setf (first (resource-parameters new-task)) 178)
                  (setf (first (resource-parameters new-task2)) 118)
                  (setf (resource-duration new-task) 178)
                  (setf (resource-duration new-task2) 118)))
-              (setf (resource-distribution new-task) (get-distribution type)
-                    (resource-earliest-start-time new-task) (best-end-time item)
-                    (resource-earliest-end-time new-task) (+ (best-end-time item)
-                                                             (resource-duration new-task)))
-              (setf (resource-distribution new-task2) (get-distribution type2)
-                    (resource-earliest-start-time new-task2) (resource-earliest-end-time new-task)
-                    (resource-earliest-end-time new-task2) (+ (resource-earliest-start-time new-task2)
-                                                              (resource-duration new-task2)))
+              (setf (resource-distribution new-task)
+		    (get-distribution type)
+                    (resource-earliest-start-time new-task)
+		    (best-end-time item)
+                    (resource-earliest-end-time new-task)
+		    (+ (best-end-time item)
+		       (resource-duration new-task)))
+              (setf (resource-distribution new-task2)
+		    (get-distribution type2)
+                    (resource-earliest-start-time new-task2)
+		    (resource-earliest-end-time new-task)
+                    (resource-earliest-end-time new-task2)
+		    (+ (resource-earliest-start-time new-task2)
+		       (resource-duration new-task2)))
               (if (eql (resource-distribution new-task) :same-as-parent) (break))
               (push item (resource-predecessors new-task))
               (push new-task (resource-dependents item))
@@ -451,13 +464,15 @@
               (schedule-resource new-task
                                  (best-queue-for-resource
                                   (get-processor)
-                                  (most-specific-superclass (resource-type new-task)
-                                                            types)
+                                  (most-specific-superclass
+				   (resource-type new-task)
+				   types)
                                   new-task))
               (schedule-resource new-task2
                                  (best-queue-for-resource
                                   (get-processor)
-                                  (most-specific-superclass (resource-type new-task2)
-                                                            types)
+                                  (most-specific-superclass
+				   (resource-type new-task2)
+				   types)
                                   new-task2))
               )))))

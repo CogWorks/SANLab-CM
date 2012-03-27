@@ -222,51 +222,30 @@
             *data-files*)
     (save-models ht "AGG")))
 
-#|
 (defmethod save-models ((ht hash-table) (subject string))
   (ensure-directories-exist (format nil "~A/~A/" *save-dir* subject))
-  (maphash #'(lambda (k v)
-               (do ((l v (cdr l))
-                    (i 1 (1+ i)))
-                   ((null l) nil)
-                 (setf (app-property 'current-controller) (make-instance 'controller))
-                 (with-open-file (out (format nil "~A/~A/~A-~A-~A-~A-durations.txt"
-                                              *save-dir* subject subject
-                                              k (num-merged-trials (car l)) i)
-                                      :if-exists :supersede :direction :output)
-                   (dolist (dur (start-resource-trial-duration (car l)))
-                     (format out "~A~%" dur)))
-                 (let ((model (resource-graph-to-sanlab-model (car l)))
-                       (p (format nil "~A/~A/~A-~A-~A-~A.san/"
-                                  *save-dir* subject subject
-                                  k (num-merged-trials (car l)) i)))
-                   (make-sanlab-bundle p)
-                   (write-model-to-bundle p model))))
-           ht)
-)
-|#
-
-(defmethod save-models ((ht hash-table) (subject string))
-  (ensure-directories-exist (format nil "~A/~A/" *save-dir* subject))
-  (maphash #'(lambda (k v)
-               (do ((l v (cdr l))
-                    (i 1 (1+ i)))
-                   ((null l) nil)
-                 (setf (app-property 'current-controller) (make-instance 'controller))
-                 (ensure-directories-exist (format nil "~A/~A/~A/" *save-dir* subject k))
-                 (with-open-file (out (format nil "~A/~A/~A/~A-~A-~A-~A-durations.txt"
-                                              *save-dir* subject k subject
-                                              k (num-merged-trials (car l)) i)
-                                      :if-exists :supersede :direction :output)
-                   (dolist (dur (start-resource-trial-duration (car l)))
-                     (format out "~A~%" dur)))
-                 (let ((model (resource-graph-to-sanlab-model (car l)))
-                       (p (format nil "~A/~A/~A/~A-~A-~A-~A.san/"
-                                  *save-dir* subject k subject
-                                  k (num-merged-trials (car l)) i)))
-                   (make-sanlab-bundle p)
-                   (write-model-to-bundle p model))))
-           ht))
+  (maphash
+   #'(lambda (k v)
+       (do ((l v (cdr l))
+	    (i 1 (1+ i)))
+	   ((null l) nil)
+	 (setf (app-property 'current-controller) (make-instance 'controller))
+	 (ensure-directories-exist (format nil "~A/~A/~A/" *save-dir* subject k))
+	 (with-open-file
+	  (out
+	   (format nil "~A/~A/~A/~A-~A-~A-~A-durations.txt"
+		   *save-dir* subject k subject
+		   k (num-merged-trials (car l)) i)
+	   :if-exists :supersede :direction :output)
+	  (dolist (dur (start-resource-trial-duration (car l)))
+	    (format out "~A~%" dur)))
+	 (let ((model (resource-graph-to-sanlab-model (car l)))
+	       (p (format nil "~A/~A/~A/~A-~A-~A-~A.san/"
+			  *save-dir* subject k subject
+			  k (num-merged-trials (car l)) i)))
+	   (make-sanlab-bundle p)
+	   (write-model-to-bundle p model))))
+   ht))
 
 (defparameter *areas-of-interest*
   '())

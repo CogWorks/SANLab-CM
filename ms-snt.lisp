@@ -262,24 +262,30 @@
              )
             (; Sync the two files if the fixation file trails the data file
              fixation
-             (cond ((and (<= 100 (- (fourth fixation) (third fixation)))
-                         (> 2.0 (first (last fixation))))
-                    (setf args (make-hash-table))
-                    (let ((start (make-hash-table))
-                          (end (make-hash-table)))
-                      (cond ((parser-second-last-fixation parser)
-                             (setf (gethash 2 start) (fourth (parser-second-last-fixation parser)))
-                             (setf (gethash 2 end) (third fixation)))
-                            (t
-                             (setf (gethash 2 start) (- (third fixation) 30.0))
-                             (setf (gethash 2 end) (third fixation))))
-                      (setf (gethash 3 start) (third fixation))
-                      (setf (gethash 3 end) (fourth fixation))
-                      (setf (gethash :start args) start)
-                      (setf (gethash :end args) end)
-                      (if (< (first (last fixation)) 2.0)
-                          (setf (gethash :label args) (format nil "~A" (first (last fixation 2)))))
-                    )))
+             (cond
+	      ((and (<= 100 (- (fourth fixation) (third fixation)))
+		    (> 2.0 (first (last fixation))))
+	       (setf args (make-hash-table))
+	       (let ((start (make-hash-table))
+		     (end (make-hash-table)))
+		 (cond
+		  ((parser-second-last-fixation parser)
+		   (setf (gethash 2 start)
+			 (fourth
+			  (parser-second-last-fixation
+			   parser)))
+		   (setf (gethash 2 end)
+			 (third fixation)))
+		  (t
+		   (setf (gethash 2 start) (- (third fixation) 30.0))
+		   (setf (gethash 2 end) (third fixation))))
+		 (setf (gethash 3 start) (third fixation))
+		 (setf (gethash 3 end) (fourth fixation))
+		 (setf (gethash :start args) start)
+		 (setf (gethash :end args) end)
+		 (if (< (first (last fixation)) 2.0)
+		     (setf (gethash :label args) (format nil "~A" (first (last fixation 2)))))
+		 )))
              (setf (parser-second-last-fixation parser) fixation)
              (setf fixation
                    (setf (parser-last-fixation parser)
@@ -387,23 +393,25 @@
 
 (defmethod save-models ((ht hash-table) (subject string))
   (ensure-directories-exist (format nil "~A/~A/" *save-dir* subject))
-  (maphash #'(lambda (k v)
-               (do ((l v (cdr l))
-                    (i 1 (1+ i)))
-                   ((null l) nil)
-                 (setf (app-property 'current-controller) (make-instance 'controller))
-                 (ensure-directories-exist (format nil "~A/~A/~A/" *save-dir* subject k))
-                 (with-open-file (out (format nil "~A/~A/~A/~A-~A-~A-~A-durations.txt"
-                                              *save-dir* subject k subject
-                                              k (num-merged-trials (car l)) i)
-                                      :if-exists :supersede :direction :output)
-                   (dolist (dur (start-resource-trial-duration (car l)))
-                     (format out "~A~%" dur)))
-                 (let ((model (resource-graph-to-sanlab-model (car l)))
-                       (p (format nil "~A/~A/~A/~A-~A-~A-~A.san/"
-                                  *save-dir* subject k subject
-                                  k (num-merged-trials (car l)) i)))
-                   (make-sanlab-bundle p)
-                   (write-model-to-bundle p model))))
-           ht))
+  (maphash
+   #'(lambda (k v)
+       (do ((l v (cdr l))
+	    (i 1 (1+ i)))
+	   ((null l) nil)
+	 (setf (app-property 'current-controller) (make-instance 'controller))
+	 (ensure-directories-exist (format nil "~A/~A/~A/" *save-dir* subject k))
+	 (with-open-file (out
+			  (format nil "~A/~A/~A/~A-~A-~A-~A-durations.txt"
+				  *save-dir* subject k subject
+				  k (num-merged-trials (car l)) i)
+			  :if-exists :supersede :direction :output)
+			 (dolist (dur (start-resource-trial-duration (car l)))
+			   (format out "~A~%" dur)))
+	 (let ((model (resource-graph-to-sanlab-model (car l)))
+	       (p (format nil "~A/~A/~A/~A-~A-~A-~A.san/"
+			  *save-dir* subject k subject
+			  k (num-merged-trials (car l)) i)))
+	   (make-sanlab-bundle p)
+	   (write-model-to-bundle p model))))
+   ht))
 
