@@ -110,6 +110,7 @@
                         *cut-off*)
                      (= (parser-clicks parser) 1)))
           ;(format t "Valid trial? ~A~%" (gethash 'valid-trial args))
+          (incf (parser-trial parser))
           (setf (gethash 'condition args) *condition*)
           (setf (parser-clicks parser) 0
                 (parser-start-time parser) 0)

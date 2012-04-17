@@ -1,5 +1,10 @@
 (defconstant M_PI 3.141592653589793)
 
+(defun list-median (l)
+  (let ((r (sort l #'<))
+        (c (floor (/ (length l) 2))))
+    (float (nth c r) 0.0)))
+
 (defun Norm_p (z)
   (let ((z (abs z)))
     (expt
@@ -88,6 +93,67 @@
 		    (break)))))
 	 :wait t :show nil))))))
 
+(defun mann-whitney-u (list1 list2)
+  (with-open-file (f "list1.txt" :direction :output :if-exists :supersede)
+    (let (nl)
+      (dolist (l list1)
+        (format f (if nl "~%~A" "~A") (float l 0.0))
+        (setf nl t))))
+  (with-open-file (f "list2.txt" :direction :output :if-exists :supersede)
+    (let (nl)
+      (dolist (l list2)
+        (format f (if nl "~%~A" "~A") (float l 0.0))
+        (setf nl t))))
+  (let ((stream (sys:open-pipe (list "/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7-32" "/Users/ewpatton/mannwhitneyu.py" "list1.txt" "list2.txt")))
+        u p)
+    (setf u (read stream))
+    (setf p (read stream))
+    (close stream)
+    (values u p)))
+
+(defun compute-models-mww (lst1 lst2 out &optional (trials 30))
+  (do ((x (car lst1) (car lst1))
+       (y (car lst2) (car lst2)))
+      ((null lst1) nil)
+    (setf (app-property 'current-controller) (make-instance 'controller :model (make-instance 'model)))
+    (let ((model (open-model (app-property 'current-controller) x)) data)
+      (setf lst1 (cdr lst1) lst2 (cdr lst2))
+      (cond
+       (model
+        (setf data nil)
+        (with-open-file
+            (durations y :direction :input)
+          (do ((line (read-line durations nil nil)
+                     (read-line durations nil nil)))
+              ((null line) line)
+            (if (position #\Tab line)
+                (push (third (mapcar #'read-from-string (explode-tab line))) data)
+              (push line data))))
+        (if (< 20 (length data))
+        (run-model
+         (app-property 'current-controller) trials
+         #'(lambda (method &rest args)
+             (case method
+               ('results
+                (let ((times (mapcar #'trial-result-duration
+                                     (first args))))
+                  (multiple-value-bind (u p)
+                      (mann-whitney-u times data)
+                    (let ((m1 (list-median times))
+                          (m2 (list-median data)))
+                      (format out "~A~C~A~C~A~C~A~C~A~C~A~C~A~C~A~%" x
+                              #\tab (float m1 0.0)
+                              #\tab (float (stdev times m1) 0.0)
+                              #\tab (float m2 0.0)
+                              #\tab (length times)
+                              #\tab (length data)
+                              #\tab u
+                              #\tab p)))))
+               (t
+                (if (eql 'error method)
+                    (break)))))
+         :wait t :show nil)))))))
+
 (defun compute-calib-results (path)
   (initialize)
   (let ((lst (directory (format nil "~A/*.san" path))))
@@ -99,7 +165,7 @@
       (dolist (x lst)
         (push (first x) a)
         (push (second x) b))
-      (compute-models a b *standard-output* 100))))
+      (compute-models-mww a b *standard-output* 100))))
 
 (defun compute-snt-results (path)
   (initialize)
