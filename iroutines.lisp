@@ -163,6 +163,10 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
 (defun ir-preview-image (ir)
   (if (equal (type-of ir) 'ir-list-layout) (setq ir (ir-list-layout-selected-item ir)))
   (if (not (equal (type-of ir) 'interactive-routine-pointer)) (return-from ir-preview-image))
+  (multiple-value-bind (width height) (get-ir-boundaries ir)
+    (let* ((scale (min (/ 64 width) (/ 64 height)))
+           (half-width (floor (/ (app-property 'editor-default-activity-width) 2)))
+           (half-height (floor (/ (app-property 'editor-default-activity-height) 2))))
   (gp:with-pixmap-graphics-port
       (port *invisible-output-pane*
             64 64
@@ -172,14 +176,44 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
     (let* ((preview (ir-scaled-image ir))
            (width (gp:image-width preview))
            (height (gp:image-height preview)))
+      (gp:draw-point
+       port
+       1 1)
+      (gp:externalize-and-write-image port preview "/Users/ewpatton/test.png")
+      (ir-scaled-image-internal ir port scale width height half-width half-height)
+#|
       (gp:draw-image
        port
        preview
        (floor (- 32 (/ width 2))) (floor (- 32 (/ height 2))))
+|#
       (gp:free-image *invisible-output-pane* preview))
     ;;; Make image
     (setq *drag-image* (gp:make-image-from-port port))
-))
+))))
+
+(defun ir-scaled-image-internal (ir port scale width height half-width half-height)
+  (gp:draw-rectangle port
+                     0 0 (round (* scale width)) (round (* scale height))
+                     :foreground #(:RGB 1.0 1.0 1.0)
+                     :filled t)
+  (dolist (source (task-list ir))
+    (dolist (target (edges-out source))
+      (let ((x1 (+ (offset-x source) half-width))
+            (y1 (+ (offset-y source) half-height))
+            (x2 (+ (offset-x target) half-width))
+            (y2 (+ (offset-y target) half-height)))
+        (gp:draw-line port
+                      (floor (* scale x1)) (floor (* scale y1))
+                      (floor (* scale x2)) (floor (* scale y2))
+                      :forecolor #(:RGB 0.0 0.0 0.0)))))
+  (dolist (task (task-list ir))
+    (gp:draw-rectangle port
+                       (floor (* scale (offset-x task))) (floor (* scale (offset-y task)))
+                       (1- (floor (* scale (app-property 'editor-default-activity-width)))) (1- (floor (* scale (app-property 'editor-default-activity-height))))
+                       :foreground (get-color (operator-type task))
+                       :filled t))
+)
 
 (defun ir-scaled-image (ir)
   (if (not (equal (type-of ir) 'interactive-routine-pointer)) (error "~a, supplied to ~a, is not of type ~a" ir #'ir-scaled-image 'interactive-routine))
@@ -189,26 +223,7 @@ along with SANLab-CM. If not, see <http://www.gnu.org/license/>.
            (half-height (floor (/ (app-property 'editor-default-activity-height) 2))))
       (gp:with-pixmap-graphics-port
           (port *invisible-output-pane* (round (* scale width)) (round (* scale height)) :clear t)
-        (gp:draw-rectangle port
-          0 0 (round (* scale width)) (round (* scale height))
-          :foreground #(:RGB 1.0 1.0 1.0)
-          :filled t)
-        (dolist (source (task-list ir))
-          (dolist (target (edges-out source))
-            (let ((x1 (+ (offset-x source) half-width))
-                  (y1 (+ (offset-y source) half-height))
-                  (x2 (+ (offset-x target) half-width))
-                  (y2 (+ (offset-y target) half-height)))
-              (gp:draw-line port
-                (floor (* scale x1)) (floor (* scale y1))
-                (floor (* scale x2)) (floor (* scale y2))
-                :forecolor #(:RGB 0.0 0.0 0.0)))))
-        (dolist (task (task-list ir))
-          (gp:draw-rectangle port
-            (floor (* scale (offset-x task))) (floor (* scale (offset-y task)))
-            (1- (floor (* scale (app-property 'editor-default-activity-width)))) (1- (floor (* scale (app-property 'editor-default-activity-height))))
-            :foreground (get-color (operator-type task))
-            :filled t))
+        (ir-scaled-image-internal ir port scale width height half-width half-height)
         (gp:make-image-from-port port)))))
 
 (defclass ir-list-layout (capi:pinboard-layout)
